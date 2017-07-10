@@ -2,7 +2,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.40629.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "M007_ExtendedFridge", "M007_ExtendedFridge.csproj", "{32D49FEF-8AB9-4A4F-8429-67996E628D67}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExtendedFridge", "ExtendedFridge/ExtendedFridge.csproj", "{32D49FEF-8AB9-4A4F-8429-67996E628D67}"
 EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution

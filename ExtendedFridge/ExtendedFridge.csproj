@@ -5,17 +5,18 @@
     <ProjectGuid>{32D49FEF-8AB9-4A4F-8429-67996E628D67}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <AssemblyName>M007_ExtendedFridge</AssemblyName>
+    <AssemblyName>ExtendedFridge</AssemblyName>
     <OutputType>Library</OutputType>
-    <RootNamespace>M007_ExtendedFridge</RootNamespace>
+    <RootNamespace>ExtendedFridge</RootNamespace>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
     <SccAuxPath>SAK</SccAuxPath>
     <SccProvider>SAK</SccProvider>
+    <DeployModFolderName>ExtendedFridge</DeployModFolderName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <OutputPath>D:\Program Files %28x86%29\Steam\SteamApps\common\Stardew Valley\Mods\M007_ExtendedFridge\</OutputPath>
+    <OutputPath>bin\Debug</OutputPath>
     <DebugSymbols>true</DebugSymbols>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <Optimize>false</Optimize>
@@ -25,7 +26,7 @@
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <OutputPath>D:\Program Files %28x86%29\Steam\SteamApps\common\Stardew Valley\Mods\M007_ExtendedFridge\</OutputPath>
+    <OutputPath>bin\Release</OutputPath>
     <DebugSymbols>false</DebugSymbols>
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
@@ -35,35 +36,8 @@
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Program Files (x86)\Microsoft XNA\XNA Game Studio\v4.0\References\Windows\x86\Microsoft.Xna.Framework.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.Xna.Framework.Game">
-      <HintPath>.\SDV_ShopTestReferences\Microsoft.Xna.Framework.Game.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.Xna.Framework.Graphics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Program Files (x86)\Microsoft XNA\XNA Game Studio\v4.0\References\Windows\x86\Microsoft.Xna.Framework.Graphics.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Stardew Valley">
-      <HintPath>D:\Program Files (x86)\Steam\SteamApps\common\Stardew Valley\Stardew Valley.exe</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="StardewModdingAPI">
-      <HintPath>D:\Program Files (x86)\Steam\SteamApps\common\Stardew Valley\StardewModdingAPI.exe</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Core" />
     <Reference Include="System.XML" />
-    <Reference Include="xTile">
-      <HintPath>D:\Program Files (x86)\Steam\SteamApps\common\Stardew Valley\xTile.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FridgeGrabMenu.cs" />
@@ -84,5 +58,16 @@
       <DesignTimeSharedInput>false</DesignTimeSharedInput>
     </Compile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="manifest.json" />
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\packages\Pathoschild.Stardew.ModBuildConfig.1.6.1\build\Pathoschild.Stardew.ModBuildConfig.targets" Condition="Exists('..\packages\Pathoschild.Stardew.ModBuildConfig.1.6.1\build\Pathoschild.Stardew.ModBuildConfig.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Pathoschild.Stardew.ModBuildConfig.1.6.1\build\Pathoschild.Stardew.ModBuildConfig.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Pathoschild.Stardew.ModBuildConfig.1.6.1\build\Pathoschild.Stardew.ModBuildConfig.targets'))" />
+  </Target>
 </Project>

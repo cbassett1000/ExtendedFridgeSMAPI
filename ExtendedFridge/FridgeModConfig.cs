@@ -1,11 +1,6 @@
-using StardewValley;
-using StardewValley.Menus;
-using System;
-using System.Collections.Generic;
-
-namespace M007_ExtendedFridge
+namespace ExtendedFridge
 {
-    public class FridgeModConfig
+    internal class FridgeModConfig
     {
         public string fridgePrevPageKey {get; set;}
         public string fridgeNextPageKey {get; set;}
@@ -17,7 +12,5 @@ namespace M007_ExtendedFridge
             fridgePrevPageKey = "Left";
             autoSwitchPageOnGrab = true;
         }
-
     }
-
 }

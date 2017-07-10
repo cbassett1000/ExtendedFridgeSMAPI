@@ -1,15 +1,12 @@
-using Microsoft.Xna.Framework;
-using StardewValley;
-using StardewValley.Menus;
-using StardewValley.Objects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
+using StardewValley;
+using StardewValley.Menus;
 
-namespace M007_ExtendedFridge
+namespace ExtendedFridge
 {
-    public class FridgeChest
+    internal class FridgeChest
     {
         public readonly int MAX_CAPACITY = ITEMS_PER_PAGE * MAX_ITEM_PAGE;
         public const int ITEMS_PER_PAGE = 36;
@@ -186,7 +183,7 @@ namespace M007_ExtendedFridge
 
         private string GetPageString()
         {
-            return String.Format("Extended Fridge 0.96 SMAPI 1.15 | Current Page: {0} | {1} items in fridge", (currentpage + 1).ToString(), this.items.Count);
+            return String.Format("Extended Fridge {0} | Current Page: {1} | {2} items in fridge", M007_ExtendedFridge_Mod.Version, (currentpage + 1), this.items.Count);
         }
 
 

@@ -1,32 +1,25 @@
 using System;
-using System.Reflection;
-using System.Linq;
-
+using StardewModdingAPI;
+using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Locations;
 using StardewValley.Menus;
 
-using StardewModdingAPI;
-using StardewModdingAPI.Events;
-
-namespace M007_ExtendedFridge
+namespace ExtendedFridge
 {
     public class M007_ExtendedFridge_Mod : Mod
     {
-        public static FridgeChest _fridge;
-        public static FridgeModConfig config;
-
-        public static bool IsInFridgeMenu = false;
-        public static readonly int FRIDGE_TILE_ID = 173;
-
-        public M007_ExtendedFridge_Mod()
-        {
-        }
+        private static FridgeChest _fridge;
+        private static FridgeModConfig config;
+        internal static ISemanticVersion Version;
+        private static bool IsInFridgeMenu = false;
+        private static readonly int FRIDGE_TILE_ID = 173;
 
         public override void Entry(IModHelper helper)
         {
             var modPath = Helper.DirectoryPath;
             config = Helper.ReadConfig<FridgeModConfig>();
+            Version = this.ModManifest.Version;
 
             MenuEvents.MenuChanged += Event_MenuChanged;
 
