@@ -1,13 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-
 using StardewValley;
 using StardewValley.Buildings;
 using StardewValley.Menus;
@@ -16,7 +11,7 @@ using StardewValley.Objects;
 //using xTile.Dimensions;
 
 
-namespace M007_ExtendedFridge
+namespace ExtendedFridge
 {
     public class FridgeGrabMenu : MenuWithInventory
     {

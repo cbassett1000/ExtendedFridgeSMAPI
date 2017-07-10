@@ -9,5 +9,5 @@
     },
     "Description": "Lets you add more items to the fridge.",
     "UniqueID": "Crystalmir.ExtendedFridge",
-    "EntryDll": "M007_ExtendedFridge.dll"
+    "EntryDll": "ExtendedFridge.dll"
 }

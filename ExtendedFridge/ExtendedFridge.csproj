@@ -5,9 +5,9 @@
     <ProjectGuid>{32D49FEF-8AB9-4A4F-8429-67996E628D67}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <AssemblyName>M007_ExtendedFridge</AssemblyName>
+    <AssemblyName>ExtendedFridge</AssemblyName>
     <OutputType>Library</OutputType>
-    <RootNamespace>M007_ExtendedFridge</RootNamespace>
+    <RootNamespace>ExtendedFridge</RootNamespace>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>

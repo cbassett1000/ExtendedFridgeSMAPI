@@ -1,9 +1,4 @@
-using StardewValley;
-using StardewValley.Menus;
-using System;
-using System.Collections.Generic;
-
-namespace M007_ExtendedFridge
+namespace ExtendedFridge
 {
     public class FridgeModConfig
     {

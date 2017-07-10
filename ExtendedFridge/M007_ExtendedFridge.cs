@@ -1,15 +1,11 @@
 using System;
-using System.Reflection;
-using System.Linq;
-
+using StardewModdingAPI;
+using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Locations;
 using StardewValley.Menus;
 
-using StardewModdingAPI;
-using StardewModdingAPI.Events;
-
-namespace M007_ExtendedFridge
+namespace ExtendedFridge
 {
     public class M007_ExtendedFridge_Mod : Mod
     {

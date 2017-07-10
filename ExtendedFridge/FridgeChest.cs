@@ -1,13 +1,10 @@
-using Microsoft.Xna.Framework;
-using StardewValley;
-using StardewValley.Menus;
-using StardewValley.Objects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
+using StardewValley;
+using StardewValley.Menus;
 
-namespace M007_ExtendedFridge
+namespace ExtendedFridge
 {
     public class FridgeChest
     {
