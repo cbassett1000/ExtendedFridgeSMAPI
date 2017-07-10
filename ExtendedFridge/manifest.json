@@ -1,14 +1,13 @@
 {
     "Name": "Extended Fridge",
-    "Authour": "Crystalmir",
+    "Author": "Crystalmir",
     "Version": {
         "MajorVersion": 1,
         "MinorVersion": 0,
-        "PatchVersion": 0,
-        "Build": ""
+        "PatchVersion": 1,
+        "Build": null
     },
-    "Description": "Extended Fridges alpha",
-    "UniqueID": "Mystra007ExtendedFridge",
-    "PerSaveConfigs": false,
+    "Description": "Lets you add more items to the fridge.",
+    "UniqueID": "Crystalmir.ExtendedFridge",
     "EntryDll": "M007_ExtendedFridge.dll"
 }
