@@ -183,7 +183,7 @@ namespace ExtendedFridge
 
         private string GetPageString()
         {
-            return String.Format("Extended Fridge 0.96 SMAPI 1.15 | Current Page: {0} | {1} items in fridge", (currentpage + 1).ToString(), this.items.Count);
+            return String.Format("Extended Fridge {0} | Current Page: {1} | {2} items in fridge", M007_ExtendedFridge_Mod.Version, (currentpage + 1), this.items.Count);
         }
 
 

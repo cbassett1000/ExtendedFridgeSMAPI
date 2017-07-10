@@ -11,6 +11,7 @@ namespace ExtendedFridge
     {
         private static FridgeChest _fridge;
         private static FridgeModConfig config;
+        internal static ISemanticVersion Version;
         private static bool IsInFridgeMenu = false;
         private static readonly int FRIDGE_TILE_ID = 173;
 
@@ -18,6 +19,7 @@ namespace ExtendedFridge
         {
             var modPath = Helper.DirectoryPath;
             config = Helper.ReadConfig<FridgeModConfig>();
+            Version = this.ModManifest.Version;
 
             MenuEvents.MenuChanged += Event_MenuChanged;
 
