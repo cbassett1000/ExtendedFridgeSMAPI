@@ -6,7 +6,7 @@ using StardewValley.Menus;
 
 namespace ExtendedFridge
 {
-    public class FridgeChest
+    internal class FridgeChest
     {
         public readonly int MAX_CAPACITY = ITEMS_PER_PAGE * MAX_ITEM_PAGE;
         public const int ITEMS_PER_PAGE = 36;

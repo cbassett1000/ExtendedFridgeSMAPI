@@ -1,6 +1,6 @@
 namespace ExtendedFridge
 {
-    public class FridgeModConfig
+    internal class FridgeModConfig
     {
         public string fridgePrevPageKey {get; set;}
         public string fridgeNextPageKey {get; set;}
@@ -12,7 +12,5 @@ namespace ExtendedFridge
             fridgePrevPageKey = "Left";
             autoSwitchPageOnGrab = true;
         }
-
     }
-
 }

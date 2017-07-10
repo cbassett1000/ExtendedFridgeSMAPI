@@ -13,7 +13,7 @@ using StardewValley.Objects;
 
 namespace ExtendedFridge
 {
-    public class FridgeGrabMenu : MenuWithInventory
+    internal class FridgeGrabMenu : MenuWithInventory
     {
         public const int region_itemsToGrabMenuModifier = 53910;
 

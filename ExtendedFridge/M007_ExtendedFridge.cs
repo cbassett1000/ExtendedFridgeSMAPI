@@ -9,15 +9,10 @@ namespace ExtendedFridge
 {
     public class M007_ExtendedFridge_Mod : Mod
     {
-        public static FridgeChest _fridge;
-        public static FridgeModConfig config;
-
-        public static bool IsInFridgeMenu = false;
-        public static readonly int FRIDGE_TILE_ID = 173;
-
-        public M007_ExtendedFridge_Mod()
-        {
-        }
+        private static FridgeChest _fridge;
+        private static FridgeModConfig config;
+        private static bool IsInFridgeMenu = false;
+        private static readonly int FRIDGE_TILE_ID = 173;
 
         public override void Entry(IModHelper helper)
         {
