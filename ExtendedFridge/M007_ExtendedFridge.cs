@@ -24,6 +24,7 @@ namespace ExtendedFridge
             MenuEvents.MenuChanged += Event_MenuChanged;
 
             //LocationEvents.CurrentLocationChanged += Event_LocationChanged;
+            PlayerEvents.Warped += PlayerEvents_Warped;
             StardewModdingAPI.Events.ControlEvents.KeyReleased += Event_KeyReleased;
             this.Monitor.Log("ExtendedFridge Entry");
         }
@@ -46,7 +47,7 @@ namespace ExtendedFridge
             }
         }
 
-        private void Event_LocationChanged(object send, EventArgsCurrentLocationChanged e)
+        private void PlayerEvents_Warped(object send, EventArgsPlayerWarped e)
         {
             var priorlocation = e.PriorLocation;
             if (e.NewLocation is FarmHouse)
@@ -59,11 +60,11 @@ namespace ExtendedFridge
         {
             Microsoft.Xna.Framework.Vector2 lastGrabbedTile = Game1.player.lastGrabTile;
             //Log.Debug("M007_ExtendedFridge Event_MenuChanged HIT", new object[0]);
-
+            /*
             if (Game1.currentLocation is FarmHouse)
             {
                 this.Monitor.Log(String.Format("M007_ExtendedFridge lastGrabTileX:{0} lastGrabTileY:{1}", (int)Game1.player.lastGrabTile.X, (int)Game1.player.lastGrabTile.Y));
-            }
+            }*/
 
             if (ClickedOnFridge())
             {
@@ -77,10 +78,10 @@ namespace ExtendedFridge
                     {
                         _fridge = new FridgeChest(config.autoSwitchPageOnGrab);
                         StardewValley.Locations.FarmHouse h = (StardewValley.Locations.FarmHouse)Game1.currentLocation;
-                        _fridge.items.AddRange(h.fridge.items);
+                        _fridge.items.AddRange(h.fridge.Value.items);
                     }
                     _fridge.ShowCurrentPage();
-                    this.Monitor.Log("M007_ExtendedFridge Fridge HOOKED");
+                   // this.Monitor.Log("M007_ExtendedFridge Fridge HOOKED");
                 }
 
             }

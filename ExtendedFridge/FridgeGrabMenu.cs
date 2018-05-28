@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -229,7 +230,7 @@ namespace ExtendedFridge
         //2. ItemGrabMenu.behaviorOnItemSelectFunction to FridgeGrabMenu.behaviorOnItemSelectFunction behaviorOnItemGrab
         //3. Add FridgeGrabMenu.behaviorOnPageCtlClick behaviorOnClickNextButton = null, FridgeGrabMenu.behaviorOnPageCtlClick behaviorOnClickPreviousButton = null, bool bShowPrevButton = false, bool bShowNextButton = false, FridgeGrabMenu.behaviorOnOrganizeItems behaviorOnClickOrganize = null at the end
         //DONE
-        public FridgeGrabMenu(List<Item> inventory, bool reverseGrab, bool showReceivingMenu, InventoryMenu.highlightThisItem highlightFunction, FridgeGrabMenu.behaviorOnItemSelect behaviorOnItemSelectFunction, string message, FridgeGrabMenu.behaviorOnItemSelect behaviorOnItemGrab = null, bool snapToBottom = false, bool canBeExitedWithKey = false, bool playRightClickSound = true, bool allowRightClick = true, bool showOrganizeButton = false, int source = 0, Item sourceItem = null, int whichSpecialButton = -1, object specialObject = null, FridgeGrabMenu.behaviorOnPageCtlClick behaviorOnClickNextButton = null, FridgeGrabMenu.behaviorOnPageCtlClick behaviorOnClickPreviousButton = null, bool bShowPrevButton = false, bool bShowNextButton = false, FridgeGrabMenu.behaviorOnOrganizeItems behaviorOnClickOrganize = null) : base(highlightFunction, true, true, 0, 0)
+        public FridgeGrabMenu(IList<Item> inventory, bool reverseGrab, bool showReceivingMenu, InventoryMenu.highlightThisItem highlightFunction, FridgeGrabMenu.behaviorOnItemSelect behaviorOnItemSelectFunction, string message, FridgeGrabMenu.behaviorOnItemSelect behaviorOnItemGrab = null, bool snapToBottom = false, bool canBeExitedWithKey = false, bool playRightClickSound = true, bool allowRightClick = true, bool showOrganizeButton = false, int source = 0, Item sourceItem = null, int whichSpecialButton = -1, object specialObject = null, FridgeGrabMenu.behaviorOnPageCtlClick behaviorOnClickNextButton = null, FridgeGrabMenu.behaviorOnPageCtlClick behaviorOnClickPreviousButton = null, bool bShowPrevButton = false, bool bShowNextButton = false, FridgeGrabMenu.behaviorOnOrganizeItems behaviorOnClickOrganize = null) : base(highlightFunction, true, true, 0, 0)
 		{
             int num;
             int num1;
@@ -252,9 +253,9 @@ namespace ExtendedFridge
             {
                 this.chestColorPicker = new DiscreteColorPicker(this.xPositionOnScreen, this.yPositionOnScreen - Game1.tileSize - IClickableMenu.borderWidth * 2, 0, new Chest(true))
                 {
-                    colorSelection = this.chestColorPicker.getSelectionFromColor((sourceItem as Chest).playerChoiceColor)
+                    colorSelection = this.chestColorPicker.getSelectionFromColor((sourceItem as Chest).playerChoiceColor.Value)
                 };
-                (this.chestColorPicker.itemToDrawColored as Chest).playerChoiceColor = this.chestColorPicker.getColorFromSelection(this.chestColorPicker.colorSelection);
+                (this.chestColorPicker.itemToDrawColored as Chest).playerChoiceColor.Value = this.chestColorPicker.getColorFromSelection(this.chestColorPicker.colorSelection);
                 ClickableTextureComponent clickableTextureComponent = new ClickableTextureComponent(new Microsoft.Xna.Framework.Rectangle(this.xPositionOnScreen + this.width, this.yPositionOnScreen + Game1.tileSize + Game1.pixelZoom * 5, 16 * Game1.pixelZoom, 16 * Game1.pixelZoom), Game1.mouseCursors, new Microsoft.Xna.Framework.Rectangle(119, 469, 16, 16), (float)Game1.pixelZoom, false)
                 {
                     hoverText = Game1.content.LoadString("Strings\\UI:Toggle_ColorPicker", new object[0]),
@@ -275,7 +276,7 @@ namespace ExtendedFridge
                 };
                 if (specialObject != null && specialObject is JunimoHut)
                 {
-                    this.specialButton.sourceRect.X = ((specialObject as JunimoHut).noHarvest ? 124 : 108);
+                    this.specialButton.sourceRect.X = ((specialObject as JunimoHut).noHarvest.Value ? 124 : 108);
                 }
             }
             if (snapToBottom)
@@ -526,20 +527,20 @@ namespace ExtendedFridge
                         (Game1.activeClickableMenu as ItemGrabMenu).snapCursorToCurrentSnappedComponent();
                     }
                 }
-                if (this.heldItem is StardewValley.Object && (this.heldItem as StardewValley.Object).parentSheetIndex == 326)
+                if (this.heldItem is StardewValley.Object && (this.heldItem as StardewValley.Object).ParentSheetIndex == 326)
                 {
                     this.heldItem = null;
                     Game1.player.canUnderstandDwarves = true;
-                    this.poof = new TemporaryAnimatedSprite(Game1.animations, new Microsoft.Xna.Framework.Rectangle(0, 320, 64, 64), 50f, 8, 0, new Vector2((float)(x - x % Game1.tileSize + Game1.tileSize / 4), (float)(y - y % Game1.tileSize + Game1.tileSize / 4)), false, false);
+                    //this.poof = new TemporaryAnimatedSprite(Game1.animations, new Microsoft.Xna.Framework.Rectangle(0, 320, 64, 64), 50f, 8, 0, new Vector2((float)(x - x % Game1.tileSize + Game1.tileSize / 4), (float)(y - y % Game1.tileSize + Game1.tileSize / 4)), false, false);
                     Game1.playSound("fireball");
                     return;
                 }
-                if (this.heldItem is StardewValley.Object && (this.heldItem as StardewValley.Object).isRecipe)
+                if (this.heldItem is StardewValley.Object && (this.heldItem as StardewValley.Object).IsRecipe)
                 {
                     string str = this.heldItem.Name.Substring(0, this.heldItem.Name.IndexOf("Recipe") - 1);
                     try
                     {
-                        if ((this.heldItem as StardewValley.Object).category != -7)
+                        if ((this.heldItem as StardewValley.Object).Category != -7)
                         {
                             Game1.player.craftingRecipes.Add(str, 0);
                         }
@@ -547,7 +548,7 @@ namespace ExtendedFridge
                         {
                             Game1.player.cookingRecipes.Add(str, 0);
                         }
-                        this.poof = new TemporaryAnimatedSprite(Game1.animations, new Microsoft.Xna.Framework.Rectangle(0, 320, 64, 64), 50f, 8, 0, new Vector2((float)(x - x % Game1.tileSize + Game1.tileSize / 4), (float)(y - y % Game1.tileSize + Game1.tileSize / 4)), false, false);
+                        //this.poof = new TemporaryAnimatedSprite(Game1.animations, new Microsoft.Xna.Framework.Rectangle(0, 320, 64, 64), 50f, 8, 0, new Vector2((float)(x - x % Game1.tileSize + Game1.tileSize / 4), (float)(y - y % Game1.tileSize + Game1.tileSize / 4)), false, false);
                         Game1.playSound("newRecipe");
                     }
                     catch (Exception exception)
@@ -597,7 +598,7 @@ namespace ExtendedFridge
             {
                 this.chestColorPicker = new DiscreteColorPicker(this.xPositionOnScreen, this.yPositionOnScreen - Game1.tileSize - IClickableMenu.borderWidth * 2, 0, null)
                 {
-                    colorSelection = this.chestColorPicker.getSelectionFromColor((this.sourceItem as Chest).playerChoiceColor)
+                    colorSelection = this.chestColorPicker.getSelectionFromColor((this.sourceItem as Chest).playerChoiceColor.Value)
                 };
             }
         }
@@ -626,7 +627,7 @@ namespace ExtendedFridge
                 this.chestColorPicker.receiveLeftClick(x, y, true);
                 if (this.sourceItem != null && this.sourceItem is Chest)
                 {
-                    (this.sourceItem as Chest).playerChoiceColor = this.chestColorPicker.getColorFromSelection(this.chestColorPicker.colorSelection);
+                    (this.sourceItem as Chest).playerChoiceColor.Value = this.chestColorPicker.getColorFromSelection(this.chestColorPicker.colorSelection);
                 }
             }
             if (this.colorPickerToggleButton != null && this.colorPickerToggleButton.containsPoint(x, y))
@@ -646,8 +647,8 @@ namespace ExtendedFridge
                 Game1.playSound("drumkit6");
                 if (this.whichSpecialButton == 1 && this.specialObject != null && this.specialObject is JunimoHut)
                 {
-                    (this.specialObject as JunimoHut).noHarvest = !(this.specialObject as JunimoHut).noHarvest;
-                    this.specialButton.sourceRect.X = ((this.specialObject as JunimoHut).noHarvest ? 124 : 108);
+                    (this.specialObject as JunimoHut).noHarvest.Value = !(this.specialObject as JunimoHut).noHarvest.Value;
+                    this.specialButton.sourceRect.X = ((this.specialObject as JunimoHut).noHarvest.Value ? 124 : 108);
                 }
             }
             if (this.heldItem == null && this.showReceivingMenu)
@@ -666,26 +667,26 @@ namespace ExtendedFridge
                         }
                     }
                 }
-                if (this.heldItem is StardewValley.Object && (this.heldItem as StardewValley.Object).parentSheetIndex == 326)
+                if (this.heldItem is StardewValley.Object && (this.heldItem as StardewValley.Object).ParentSheetIndex == 326)
                 {
                     this.heldItem = null;
                     Game1.player.canUnderstandDwarves = true;
-                    this.poof = new TemporaryAnimatedSprite(Game1.animations, new Microsoft.Xna.Framework.Rectangle(0, 320, 64, 64), 50f, 8, 0, new Vector2((float)(x - x % Game1.tileSize + Game1.tileSize / 4), (float)(y - y % Game1.tileSize + Game1.tileSize / 4)), false, false);
+                    //this.poof = new TemporaryAnimatedSprite(Game1.animations, new Microsoft.Xna.Framework.Rectangle(0, 320, 64, 64), 50f, 8, 0, new Vector2((float)(x - x % Game1.tileSize + Game1.tileSize / 4), (float)(y - y % Game1.tileSize + Game1.tileSize / 4)), false, false);
                     Game1.playSound("fireball");
                 }
-                else if (this.heldItem is StardewValley.Object && (this.heldItem as StardewValley.Object).parentSheetIndex == 102)
+                else if (this.heldItem is StardewValley.Object && (this.heldItem as StardewValley.Object).ParentSheetIndex == 102)
                 {
                     this.heldItem = null;
                     Game1.player.foundArtifact(102, 1);
-                    this.poof = new TemporaryAnimatedSprite(Game1.animations, new Microsoft.Xna.Framework.Rectangle(0, 320, 64, 64), 50f, 8, 0, new Vector2((float)(x - x % Game1.tileSize + Game1.tileSize / 4), (float)(y - y % Game1.tileSize + Game1.tileSize / 4)), false, false);
+                    //this.poof = new TemporaryAnimatedSprite(Game1.animations, new Microsoft.Xna.Framework.Rectangle(0, 320, 64, 64), 50f, 8, 0, new Vector2((float)(x - x % Game1.tileSize + Game1.tileSize / 4), (float)(y - y % Game1.tileSize + Game1.tileSize / 4)), false, false);
                     Game1.playSound("fireball");
                 }
-                else if (this.heldItem is StardewValley.Object && (this.heldItem as StardewValley.Object).isRecipe)
+                else if (this.heldItem is StardewValley.Object && (this.heldItem as StardewValley.Object).IsRecipe)
                 {
                     string str = this.heldItem.Name.Substring(0, this.heldItem.Name.IndexOf("Recipe") - 1);
                     try
                     {
-                        if ((this.heldItem as StardewValley.Object).category != -7)
+                        if ((this.heldItem as StardewValley.Object).Category != -7)
                         {
                             Game1.player.craftingRecipes.Add(str, 0);
                         }
@@ -693,7 +694,7 @@ namespace ExtendedFridge
                         {
                             Game1.player.cookingRecipes.Add(str, 0);
                         }
-                        this.poof = new TemporaryAnimatedSprite(Game1.animations, new Microsoft.Xna.Framework.Rectangle(0, 320, 64, 64), 50f, 8, 0, new Vector2((float)(x - x % Game1.tileSize + Game1.tileSize / 4), (float)(y - y % Game1.tileSize + Game1.tileSize / 4)), false, false);
+                        //this.poof = new TemporaryAnimatedSprite(Game1.animations, new Microsoft.Xna.Framework.Rectangle(0, 320, 64, 64), 50f, 8, 0, new Vector2((float)(x - x % Game1.tileSize + Game1.tileSize / 4), (float)(y - y % Game1.tileSize + Game1.tileSize / 4)), false, false);
                         Game1.playSound("newRecipe");
                     }
                     catch (Exception exception1)
@@ -760,10 +761,10 @@ namespace ExtendedFridge
         }
 
         //NOMOD
-        public static void organizeItemsInList(List<Item> items)
+        public static void organizeItemsInList(IList<Item> items)
         {
-            items.Sort();
-            items.Reverse();
+            items.ToList().Sort();
+            items.ToList().Reverse();
         }
 
         //NOMOD
@@ -801,9 +802,9 @@ namespace ExtendedFridge
             }
             if (key == Keys.Delete && this.heldItem != null && this.heldItem.canBeTrashed())
             {
-                if (this.heldItem is StardewValley.Object && Game1.player.specialItems.Contains((this.heldItem as StardewValley.Object).parentSheetIndex))
+                if (this.heldItem is StardewValley.Object && Game1.player.specialItems.Contains((this.heldItem as StardewValley.Object).ParentSheetIndex))
                 {
-                    Game1.player.specialItems.Remove((this.heldItem as StardewValley.Object).parentSheetIndex);
+                    Game1.player.specialItems.Remove((this.heldItem as StardewValley.Object).ParentSheetIndex);
                 }
                 this.heldItem = null;
                 Game1.playSound("trashcan");
@@ -1033,9 +1034,9 @@ namespace ExtendedFridge
             {
                 this.chestColorPicker = new DiscreteColorPicker(this.xPositionOnScreen, this.yPositionOnScreen - Game1.tileSize - IClickableMenu.borderWidth * 2, 0, new Chest(true))
                 {
-                    colorSelection = this.chestColorPicker.getSelectionFromColor((this.sourceItem as Chest).playerChoiceColor)
+                    colorSelection = this.chestColorPicker.getSelectionFromColor((this.sourceItem as Chest).playerChoiceColor.Value)
                 };
-                (this.chestColorPicker.itemToDrawColored as Chest).playerChoiceColor = this.chestColorPicker.getColorFromSelection(this.chestColorPicker.colorSelection);
+                (this.chestColorPicker.itemToDrawColored as Chest).playerChoiceColor.Value = this.chestColorPicker.getColorFromSelection(this.chestColorPicker.colorSelection);
                 ClickableTextureComponent clickableTextureComponent = new ClickableTextureComponent(new Microsoft.Xna.Framework.Rectangle(this.xPositionOnScreen + this.width, this.yPositionOnScreen + Game1.tileSize + Game1.pixelZoom * 5, 16 * Game1.pixelZoom, 16 * Game1.pixelZoom), Game1.mouseCursors, new Microsoft.Xna.Framework.Rectangle(119, 469, 16, 16), (float)Game1.pixelZoom, false)
                 {
                     hoverText = Game1.content.LoadString("Strings\\UI:Toggle_ColorPicker", new object[0])
@@ -1064,7 +1065,7 @@ namespace ExtendedFridge
             base.receiveGamePadButton(b);
             if (b == Buttons.Back && this.organizeButton != null)
             {
-                FridgeGrabMenu.organizeItemsInList(Game1.player.items);
+                FridgeGrabMenu.organizeItemsInList(Game1.player.Items);
                 Game1.playSound("Ship");
             }
         }

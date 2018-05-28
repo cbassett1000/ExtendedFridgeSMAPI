@@ -111,7 +111,8 @@ namespace ExtendedFridge
             this.clearNulls();
 
             StardewValley.Locations.FarmHouse h = (StardewValley.Locations.FarmHouse)Game1.currentLocation;
-            h.fridge.items = items;
+            IList<Item> fItems = h.fridge.Value.items;
+            fItems = items;
 
             //TODO: implement page change
 
@@ -161,7 +162,8 @@ namespace ExtendedFridge
             lastAddedItem = item;
 
             StardewValley.Locations.FarmHouse h = (StardewValley.Locations.FarmHouse)Game1.currentLocation;
-            h.fridge.items = items;
+            IList<Item> fItems = h.fridge.Value.items;
+            fItems = items;
 
             return (Item)null;
         }
@@ -178,7 +180,8 @@ namespace ExtendedFridge
             }
 
             StardewValley.Locations.FarmHouse h = (StardewValley.Locations.FarmHouse)Game1.currentLocation;
-            h.fridge.items = items;
+            IList<Item> fItems = h.fridge.Value.items;
+            fItems = items;
         }
 
         private string GetPageString()
@@ -194,7 +197,8 @@ namespace ExtendedFridge
             items.Reverse();
 
             StardewValley.Locations.FarmHouse h = (StardewValley.Locations.FarmHouse)Game1.currentLocation;
-            h.fridge.items = items;
+            IList<Item> fItems = h.fridge.Value.items;
+            fItems = items;
 
             currentpage = 0;
             ShowCurrentPage();
