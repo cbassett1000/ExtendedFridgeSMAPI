@@ -446,7 +446,7 @@ namespace ExtendedFridge
         {
             this.destroyItemOnClick = b;
         }
-
+        #region "Old Code"
         //WAS:
         //public override void receiveRightClick(int x, int y, bool playSound = true)
         //{
@@ -501,7 +501,7 @@ namespace ExtendedFridge
         //        this.heldItem = (Item)null;
         //    }
         //}
-
+        #endregion
         //IS
         //DONE
         public override void receiveRightClick(int x, int y, bool playSound = true)
@@ -606,7 +606,7 @@ namespace ExtendedFridge
         //DONE
         public override void receiveLeftClick(int x, int y, bool playSound = true)
         {
-            base.receiveLeftClick(x, y, (this.destroyItemOnClick ? false : true));
+            base.receiveLeftClick(x, y, (!this.destroyItemOnClick));
             if (this.shippingBin && this.lastShippedHolder.containsPoint(x, y))
             {
                 if (Game1.getFarm().lastItemShipped != null && Game1.player.addItemToInventoryBool(Game1.getFarm().lastItemShipped, false))
@@ -728,7 +728,8 @@ namespace ExtendedFridge
             }
             if (this.organizeButton != null && this.organizeButton.containsPoint(x, y))
             {
-                ItemGrabMenu.organizeItemsInList(this.ItemsToGrabMenu.actualInventory);
+                ItemGrabMenu.organizeItemsInList(M007_ExtendedFridge_Mod.organize());
+                //ItemGrabMenu.organizeItemsInList(this.ItemsToGrabMenu.actualInventory);
                 Game1.activeClickableMenu = new FridgeGrabMenu(this.ItemsToGrabMenu.actualInventory, false, true, new InventoryMenu.highlightThisItem(InventoryMenu.highlightAllItems), this.behaviorFunction, null, this.behaviorOnItemGrab, false, true, true, true, true, this.source, this.sourceItem, -1, null);
                 Game1.playSound("Ship");
                 return;
@@ -1019,7 +1020,7 @@ namespace ExtendedFridge
             Game1.mouseCursorTransparency = 1f;
 
             //IClickableMenu.drawTextureBox(b, Game1.menuTexture, new Rectangle(0, 256, 60, 60), 200, 20, 880, 76,new Color(125f,125f,125f) , 1f, true);
-            this.drawBorderLabel(b, message, Game1.smallFont, this.xPositionOnScreen, 0);
+            this.drawBorderLabel(b, M007_ExtendedFridge_Mod.showMessage()/*message*/, Game1.smallFont, this.xPositionOnScreen, 0);
 
             this.drawMouse(b);
         }

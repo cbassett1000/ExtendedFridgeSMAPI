@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using StardewValley;
+using StardewValley.Locations;
 using StardewValley.Menus;
 
 namespace ExtendedFridge
@@ -11,9 +12,9 @@ namespace ExtendedFridge
         public readonly int MAX_CAPACITY = ITEMS_PER_PAGE * MAX_ITEM_PAGE;
         public const int ITEMS_PER_PAGE = 36;
         public const int MAX_ITEM_PAGE = 6;
-        public int currentpage = 0;
+        public int currentpage;
         public Item lastAddedItem;
-        private bool _autoSwitchPageOnGrab = false;
+        private bool _autoSwitchPageOnGrab;
         
         public List<Item> items = new List<Item>();
 
@@ -36,7 +37,7 @@ namespace ExtendedFridge
 
         public void MovePageToNext()
         {
-            if ( (this.currentpage + 1) > (MAX_ITEM_PAGE- 1 ) || !PageHasItems(currentpage +1 ) ) { return; }
+            if ( (currentpage + 1) > (MAX_ITEM_PAGE- 1 ) || !PageHasItems(currentpage +1 ) ) { return; }
 
             currentpage += 1;
             ShowCurrentPage();
@@ -56,12 +57,12 @@ namespace ExtendedFridge
             bShowNextPage = ( ( nextpage <= (MAX_ITEM_PAGE - 1) ) && PageHasItems(nextpage) );         
 
             //Game1.activeClickableMenu = (IClickableMenu)new FridgeGrabMenu(newItems, false, true, new InventoryMenu.highlightThisItem(InventoryMenu.highlightAllItems), new FridgeGrabMenu.behaviorOnItemSelect(this.grabItemFromInventory), GetPageString(), new FridgeGrabMenu.behaviorOnItemSelect(this.grabItemFromChest), false, true, true, true, true, 1, new FridgeGrabMenu.behaviorOnPageCtlClick(this.MovePageToNext), new FridgeGrabMenu.behaviorOnPageCtlClick(this.MovePageToPrevious), bShowPrevPage, bShowNextPage, new FridgeGrabMenu.behaviorOnOrganizeItems(this.OrganizeItems));
-            Game1.activeClickableMenu = (IClickableMenu)new FridgeGrabMenu(newItems, false, true, new InventoryMenu.highlightThisItem(InventoryMenu.highlightAllItems), new FridgeGrabMenu.behaviorOnItemSelect(this.grabItemFromInventory), GetPageString(), new FridgeGrabMenu.behaviorOnItemSelect(this.grabItemFromChest), false, true, true, true, true, 1, null, -1, null, new FridgeGrabMenu.behaviorOnPageCtlClick(this.MovePageToNext), new FridgeGrabMenu.behaviorOnPageCtlClick(this.MovePageToPrevious), bShowPrevPage, bShowNextPage, new FridgeGrabMenu.behaviorOnOrganizeItems(this.OrganizeItems));
+            Game1.activeClickableMenu = new FridgeGrabMenu(newItems, false, true, InventoryMenu.highlightAllItems, grabItemFromInventory, GetPageString(), grabItemFromChest, false, true, true, true, true, 1, null, -1, null, MovePageToNext, MovePageToPrevious, bShowPrevPage, bShowNextPage, OrganizeItems);
         }
 
         public void MovePageToPrevious()
         {
-            if (this.currentpage <= 0) { return; }
+            if (currentpage <= 0) { return; }
             if (!PageHasItems(currentpage - 1)) { return; }
 
             currentpage -= 1;
@@ -72,12 +73,9 @@ namespace ExtendedFridge
         {
             if (itemindex % 36 == 0)
             {
-                return ((int)itemindex / 36) - 1;
+                return (itemindex / 36) - 1;
             }
-            else
-            {
-                return (int)itemindex / 36;
-            }
+            return itemindex / 36;
         }
 
         private List<Item> GetCurrentPageItems()
@@ -103,14 +101,14 @@ namespace ExtendedFridge
         }
 
         //behaviorOnItemGrab
-        public void grabItemFromChest(Item item, StardewValley.Farmer who)
+        public void grabItemFromChest(Item item, Farmer who)
         {
             if (!who.couldInventoryAcceptThisItem(item))
                 return;
-            this.items.Remove(item);
-            this.clearNulls();
+            items.Remove(item);
+            clearNulls();
 
-            StardewValley.Locations.FarmHouse h = (StardewValley.Locations.FarmHouse)Game1.currentLocation;
+            FarmHouse h = (FarmHouse)Game1.currentLocation;
             IList<Item> fItems = h.fridge.Value.items;
             fItems = items;
 
@@ -118,24 +116,24 @@ namespace ExtendedFridge
 
             //List<Item> newItems = GetCurrentPageItems();
 
-            this.ShowCurrentPage();
+            ShowCurrentPage();
         }
 
         //behaviorOnItemSelectFunction
-        public void grabItemFromInventory(Item item, StardewValley.Farmer who)
+        public void grabItemFromInventory(Item item, Farmer who)
         {
             if (item.Stack == 0)
                 item.Stack = 1;
-            Item obj = this.addItem(item);
+            Item obj = addItem(item);
             if (obj == null)
                 who.removeItemFromInventory(item);
             else
                 who.addItemToInventory(obj);
-            this.clearNulls();
+            clearNulls();
 
             //TODO: implement page change
             //List<Item> newItems = GetCurrentPageItems();
-            this.ShowCurrentPage();
+            ShowCurrentPage();
         }
 
         public Item addItem(Item item)
@@ -143,50 +141,50 @@ namespace ExtendedFridge
 
             lastAddedItem = null;
 
-            for (int index = 0; index < this.items.Count<Item>(); ++index)
+            for (int index = 0; index < items.Count(); ++index)
             {
-                if (this.items[index] != null && this.items[index].canStackWith(item))
+                if (items[index] != null && items[index].canStackWith(item))
                 {
-                    item.Stack = this.items[index].addToStack(item.Stack);
-                    if (item.Stack <= 0) { return (Item)null; }
+                    item.Stack = items[index].addToStack(item.Stack);
+                    if (item.Stack <= 0) { return null; }
 
                     if (_autoSwitchPageOnGrab) { currentpage = GetPageForIndex(index); }                    
                 }
             }
-            if (this.items.Count<Item>() >= MAX_CAPACITY) { return item; }
+            if (items.Count() >= MAX_CAPACITY) { return item; }
 
-            this.items.Add(item);
-            if (_autoSwitchPageOnGrab) { currentpage = GetPageForIndex(this.items.Count); }
+            items.Add(item);
+            if (_autoSwitchPageOnGrab) { currentpage = GetPageForIndex(items.Count); }
             
 
             lastAddedItem = item;
 
-            StardewValley.Locations.FarmHouse h = (StardewValley.Locations.FarmHouse)Game1.currentLocation;
+            FarmHouse h = (FarmHouse)Game1.currentLocation;
             IList<Item> fItems = h.fridge.Value.items;
             fItems = items;
 
-            return (Item)null;
+            return null;
         }
 
         public void clearNulls()
         {
-            for (int index = this.items.Count<Item>() - 1; index >= 0; --index)
+            for (int index = items.Count() - 1; index >= 0; --index)
             {
-                if (this.items[index] == null)
+                if (items[index] == null)
                 {
-                    this.items.RemoveAt(index);
+                    items.RemoveAt(index);
                     //if (_autoSwitchPageOnGrab) { currentpage = GetPageForIndex(index); }
                 }
             }
 
-            StardewValley.Locations.FarmHouse h = (StardewValley.Locations.FarmHouse)Game1.currentLocation;
+            FarmHouse h = (FarmHouse)Game1.currentLocation;
             IList<Item> fItems = h.fridge.Value.items;
             fItems = items;
         }
 
         private string GetPageString()
         {
-            return String.Format("Extended Fridge {0} | Current Page: {1} | {2} items in fridge", M007_ExtendedFridge_Mod.Version, (currentpage + 1), this.items.Count);
+            return String.Format("Extended Fridge {0} | Current Page: {1} | {2} items in fridge", M007_ExtendedFridge_Mod.Version, (currentpage + 1), items.Count);
         }
 
 
@@ -196,7 +194,7 @@ namespace ExtendedFridge
             items.Sort();
             items.Reverse();
 
-            StardewValley.Locations.FarmHouse h = (StardewValley.Locations.FarmHouse)Game1.currentLocation;
+            FarmHouse h = (FarmHouse)Game1.currentLocation;
             IList<Item> fItems = h.fridge.Value.items;
             fItems = items;
 
