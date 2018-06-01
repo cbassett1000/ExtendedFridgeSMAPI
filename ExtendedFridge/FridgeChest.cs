@@ -1,45 +1,42 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using StardewValley;
-using StardewValley.Locations;
 using StardewValley.Menus;
 
 namespace ExtendedFridge
 {
     internal class FridgeChest
     {
-        public readonly int MAX_CAPACITY = ITEMS_PER_PAGE * MAX_ITEM_PAGE;
-        public const int ITEMS_PER_PAGE = 36;
-        public const int MAX_ITEM_PAGE = 6;
-        public int currentpage;
-        public Item lastAddedItem;
-        private bool _autoSwitchPageOnGrab;
+        public readonly int MaxCapacity = ItemsPerPage * MaxItemPage;
+        public const int ItemsPerPage = 36;
+        public const int MaxItemPage = 6;
+        public int Currentpage;
+        public Item LastAddedItem;
+        private readonly bool _autoSwitchPageOnGrab;
         
-        public List<Item> items = new List<Item>();
+        public List<Item> Items = new List<Item>();
 
         public FridgeChest(bool bSwitchPage)
         {
             _autoSwitchPageOnGrab = bSwitchPage;
         }
-
+        #region "Old"
         //public void DisplayCurrentPage()
         //{
         //    List<Item> newItems = GetCurrentPageItems();
 
         //    Game1.activeClickableMenu = (IClickableMenu)new ItemGrabMenu(newItems, false, true, new InventoryMenu.highlightThisItem(InventoryMenu.highlightAllItems), new ItemGrabMenu.behaviorOnItemSelect(this.grabItemFromInventory), GetPageString(), new ItemGrabMenu.behaviorOnItemSelect(this.grabItemFromChest), false, true, true, true, true, 1);
         //}
-
+#endregion
         public bool PageHasItems(int pagenumber)
         {
-            return ( items.Count >= (pagenumber * 36) );
+            return ( Items.Count >= (pagenumber * 36) );
         }
 
         public void MovePageToNext()
         {
-            if ( (currentpage + 1) > (MAX_ITEM_PAGE- 1 ) || !PageHasItems(currentpage +1 ) ) { return; }
+            if ( (Currentpage + 1) > (MaxItemPage- 1 ) || !PageHasItems(Currentpage +1 ) ) { return; }
 
-            currentpage += 1;
+            Currentpage += 1;
             ShowCurrentPage();
         }
 
@@ -47,25 +44,22 @@ namespace ExtendedFridge
         {
             List<Item> newItems = GetCurrentPageItems();
 
-            bool bShowNextPage = false;
-            bool bShowPrevPage = false;
+            int nextpage = Currentpage + 1;
+            int prevpage = Currentpage - 1;            
 
-            int nextpage = currentpage + 1;
-            int prevpage = currentpage - 1;            
-
-            bShowPrevPage = ( (prevpage >= 0) && PageHasItems(prevpage) );
-            bShowNextPage = ( ( nextpage <= (MAX_ITEM_PAGE - 1) ) && PageHasItems(nextpage) );         
+            var bShowPrevPage = ( (prevpage >= 0) && PageHasItems(prevpage) );
+            var bShowNextPage = ( ( nextpage <= (MaxItemPage - 1) ) && PageHasItems(nextpage) );         
 
             //Game1.activeClickableMenu = (IClickableMenu)new FridgeGrabMenu(newItems, false, true, new InventoryMenu.highlightThisItem(InventoryMenu.highlightAllItems), new FridgeGrabMenu.behaviorOnItemSelect(this.grabItemFromInventory), GetPageString(), new FridgeGrabMenu.behaviorOnItemSelect(this.grabItemFromChest), false, true, true, true, true, 1, new FridgeGrabMenu.behaviorOnPageCtlClick(this.MovePageToNext), new FridgeGrabMenu.behaviorOnPageCtlClick(this.MovePageToPrevious), bShowPrevPage, bShowNextPage, new FridgeGrabMenu.behaviorOnOrganizeItems(this.OrganizeItems));
-            Game1.activeClickableMenu = new FridgeGrabMenu(newItems, false, true, InventoryMenu.highlightAllItems, grabItemFromInventory, GetPageString(), grabItemFromChest, false, true, true, true, true, 1, null, -1, null, MovePageToNext, MovePageToPrevious, bShowPrevPage, bShowNextPage, OrganizeItems);
+            Game1.activeClickableMenu = new FridgeGrabMenu(newItems, false, true, InventoryMenu.highlightAllItems, GrabItemFromInventory, GetPageString(), GrabItemFromChest, false, true, true, true, true, 1, null, -1, null, MovePageToNext, MovePageToPrevious, bShowPrevPage, bShowNextPage, OrganizeItems);
         }
 
         public void MovePageToPrevious()
         {
-            if (currentpage <= 0) { return; }
-            if (!PageHasItems(currentpage - 1)) { return; }
+            if (Currentpage <= 0) { return; }
+            if (!PageHasItems(Currentpage - 1)) { return; }
 
-            currentpage -= 1;
+            Currentpage -= 1;
             ShowCurrentPage();
         }
 
@@ -82,14 +76,14 @@ namespace ExtendedFridge
         {
             List<Item> curPageItems = new List<Item>();
 
-            int low_limit = currentpage * 36;
-            int high_limit = low_limit + 35;
+            int lowLimit = Currentpage * 36;
+            int highLimit = lowLimit + 35;
 
-            for (int i = low_limit; i <= high_limit; i++)
+            for (int i = lowLimit; i <= highLimit; i++)
             {
-                if (i < items.Count)
+                if (i < Items.Count)
                 { 
-                    curPageItems.Add(items[i]); 
+                    curPageItems.Add(Items[i]); 
                 }
                 else
                 { 
@@ -101,18 +95,14 @@ namespace ExtendedFridge
         }
 
         //behaviorOnItemGrab
-        public void grabItemFromChest(Item item, Farmer who)
+        public void GrabItemFromChest(Item item, Farmer who)
         {
             if (!who.couldInventoryAcceptThisItem(item))
                 return;
-            items.Remove(item);
-            clearNulls();
+            Items.Remove(item);
+            ClearNulls();
 
-            FarmHouse h = (FarmHouse)Game1.currentLocation;
-            IList<Item> fItems = h.fridge.Value.items;
-            fItems = items;
-
-            //TODO: implement page change
+            //1TODO: implement page change
 
             //List<Item> newItems = GetCurrentPageItems();
 
@@ -120,85 +110,74 @@ namespace ExtendedFridge
         }
 
         //behaviorOnItemSelectFunction
-        public void grabItemFromInventory(Item item, Farmer who)
+        public void GrabItemFromInventory(Item item, Farmer who)
         {
             if (item.Stack == 0)
                 item.Stack = 1;
-            Item obj = addItem(item);
+            Item obj = AddItem(item);
             if (obj == null)
                 who.removeItemFromInventory(item);
             else
                 who.addItemToInventory(obj);
-            clearNulls();
+            ClearNulls();
 
-            //TODO: implement page change
+            //1TODO: implement page change
             //List<Item> newItems = GetCurrentPageItems();
             ShowCurrentPage();
         }
 
-        public Item addItem(Item item)
+        public Item AddItem(Item item)
         {
 
-            lastAddedItem = null;
+            LastAddedItem = null;
 
-            for (int index = 0; index < items.Count(); ++index)
+            for (int index = 0; index < Items.Count; ++index)
             {
-                if (items[index] != null && items[index].canStackWith(item))
+                if (Items[index] != null && Items[index].canStackWith(item))
                 {
-                    item.Stack = items[index].addToStack(item.Stack);
+                    item.Stack = Items[index].addToStack(item.Stack);
                     if (item.Stack <= 0) { return null; }
 
-                    if (_autoSwitchPageOnGrab) { currentpage = GetPageForIndex(index); }                    
+                    if (_autoSwitchPageOnGrab) { Currentpage = GetPageForIndex(index); }                    
                 }
             }
-            if (items.Count() >= MAX_CAPACITY) { return item; }
+            if (Items.Count >= MaxCapacity) { return item; }
 
-            items.Add(item);
-            if (_autoSwitchPageOnGrab) { currentpage = GetPageForIndex(items.Count); }
+            Items.Add(item);
+            if (_autoSwitchPageOnGrab) { Currentpage = GetPageForIndex(Items.Count); }
             
 
-            lastAddedItem = item;
-
-            FarmHouse h = (FarmHouse)Game1.currentLocation;
-            IList<Item> fItems = h.fridge.Value.items;
-            fItems = items;
+            LastAddedItem = item;
 
             return null;
         }
 
-        public void clearNulls()
+        public void ClearNulls()
         {
-            for (int index = items.Count() - 1; index >= 0; --index)
+            for (int index = Items.Count - 1; index >= 0; --index)
             {
-                if (items[index] == null)
+                if (Items[index] == null)
                 {
-                    items.RemoveAt(index);
+                    Items.RemoveAt(index);
                     //if (_autoSwitchPageOnGrab) { currentpage = GetPageForIndex(index); }
                 }
             }
-
-            FarmHouse h = (FarmHouse)Game1.currentLocation;
-            IList<Item> fItems = h.fridge.Value.items;
-            fItems = items;
         }
 
         private string GetPageString()
         {
-            return String.Format("Extended Fridge {0} | Current Page: {1} | {2} items in fridge", M007_ExtendedFridge_Mod.Version, (currentpage + 1), items.Count);
+            return
+                $"Extended Fridge {ExtendedFridgeMod.Version} | Current Page: {(Currentpage + 1)} | {Items.Count} items in fridge";
         }
 
 
         //organize items behaviour
         public void OrganizeItems()
         {
-            items.Sort();
-            items.Reverse();
+            Items.Sort();
+            Items.Reverse();
 
-            FarmHouse h = (FarmHouse)Game1.currentLocation;
-            IList<Item> fItems = h.fridge.Value.items;
-            fItems = items;
-
-            currentpage = 0;
+            Currentpage = 0;
             ShowCurrentPage();
         }
     }

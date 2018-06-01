@@ -4,10 +4,12 @@ using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Buildings;
 using StardewValley.Menus;
 using StardewValley.Objects;
+using Object = StardewValley.Object;
 
 //using xTile.Dimensions;
 
@@ -16,102 +18,100 @@ namespace ExtendedFridge
 {
     internal class FridgeGrabMenu : MenuWithInventory
     {
-        public const int region_itemsToGrabMenuModifier = 53910;
+        public const int RegionItemsToGrabMenuModifier = 53910;
 
-        public const int region_organizeButton = 106;
+        public const int RegionOrganizeButton = 106;
 
-        public const int region_colorPickToggle = 27346;
+        public const int RegionColorPickToggle = 27346;
 
-        public const int region_specialButton = 12485;
+        public const int RegionSpecialButton = 12485;
 
-        public const int region_lastShippedHolder = 12598;
+        public const int RegionLastShippedHolder = 12598;
 
-        public const int source_none = 0;
+        public const int SourceNone = 0;
 
-        public const int source_chest = 1;
+        public const int SourceChest = 1;
 
-        public const int source_gift = 2;
+        public const int SourceGift = 2;
 
-        public const int source_fishingChest = 3;
+        public const int SourceFishingChest = 3;
 
-        public const int specialButton_junimotoggle = 1;
+        public const int SpecialButtonJunimotoggle = 1;
 
         public InventoryMenu ItemsToGrabMenu;
 
-        private TemporaryAnimatedSprite poof;
+        private TemporaryAnimatedSprite _poof;
 
-        public bool reverseGrab;
+        public bool ReverseGrab;
 
-        public bool showReceivingMenu = true;
+        public bool ShowReceivingMenu = true;
 
-        public bool drawBG = true;
+        public bool DrawBg = true;
 
-        public bool destroyItemOnClick;
+        public bool DestroyItemOnClick;
 
-        public bool canExitOnKey;
+        public bool CanExitOnKey;
 
-        public bool playRightClickSound;
+        public bool PlayRightClickSound;
 
-        public bool allowRightClick;
+        public bool AllowRightClick;
 
-        public bool shippingBin;
+        public bool ShippingBin;
 
-        private string message;
+        private readonly string _message;
 
         //M07: Comment these when copy-pasting code
         //private ItemGrabMenu.behaviorOnItemSelect behaviorFunction;
         //public ItemGrabMenu.behaviorOnItemSelect behaviorOnItemGrab;
         //M07: And use these instead
-        public FridgeGrabMenu.behaviorOnItemSelect behaviorFunction;
-        public FridgeGrabMenu.behaviorOnItemSelect behaviorOnItemGrab;
+        public BehaviorOnItemSelect BehaviorFunction;
+        public BehaviorOnItemSelect BehaviorOnItemGrab;
         //END_M07
 
-        private Item hoverItem;
+        private Item _sourceItem;
 
-        private Item sourceItem;
+        public ClickableTextureComponent OrganizeButton;
 
-        public ClickableTextureComponent organizeButton;
+        public ClickableTextureComponent ColorPickerToggleButton;
 
-        public ClickableTextureComponent colorPickerToggleButton;
+        public ClickableTextureComponent SpecialButton;
 
-        public ClickableTextureComponent specialButton;
+        public ClickableTextureComponent LastShippedHolder;
 
-        public ClickableTextureComponent lastShippedHolder;
+        public List<ClickableComponent> DiscreteColorPickerCc;
 
-        public List<ClickableComponent> discreteColorPickerCC;
+        public int Source;
 
-        public int source;
+        public int WhichSpecialButton;
 
-        public int whichSpecialButton;
+        public object SpecialObject;
 
-        public object specialObject;
+        private readonly bool _snappedtoBottom;
 
-        private bool snappedtoBottom;
-
-        public DiscreteColorPicker chestColorPicker;
+        public DiscreteColorPicker ChestColorPicker;
 
 
         #region -- Events --
 
 
 
-        public delegate void behaviorOnItemSelect(Item item, StardewValley.Farmer who);
+        public delegate void BehaviorOnItemSelect(Item item, Farmer who);
         #endregion
 
         #region -- Needed for Extended Fridge --        
-        private ClickableTextureComponent previousPageButton;
-        private ClickableTextureComponent nextPageButton;
+        private readonly ClickableTextureComponent _previousPageButton;
+        private readonly ClickableTextureComponent _nextPageButton;
 
-        private bool showPrevButton;
-        private bool showNextButton;
+        private readonly bool _showPrevButton;
+        private readonly bool _showNextButton;
 
-        public FridgeGrabMenu.behaviorOnPageCtlClick behaviorOnClickNextButton;
-        public FridgeGrabMenu.behaviorOnPageCtlClick behaviorOnClickPreviousButton;
-        public FridgeGrabMenu.behaviorOnOrganizeItems behaviorOnClickOrganize;
+        public BehaviorOnPageCtlClick BehaviorOnClickNextButton;
+        public BehaviorOnPageCtlClick BehaviorOnClickPreviousButton;
+        public BehaviorOnOrganizeItems BehaviorOnClickOrganize;
 
 
-        public delegate void behaviorOnPageCtlClick();
-        public delegate void behaviorOnOrganizeItems();
+        public delegate void BehaviorOnPageCtlClick();
+        public delegate void BehaviorOnOrganizeItems();
         #endregion
 
         //WAS:
@@ -124,26 +124,24 @@ namespace ExtendedFridge
 
         //IS:
         //DONE
-        public FridgeGrabMenu(List<Item> inventory) : base(null, true, true, 0, 0)
+        public FridgeGrabMenu(List<Item> inventory) : base(null, true, true)
         {
-            this.ItemsToGrabMenu = new InventoryMenu(this.xPositionOnScreen + Game1.tileSize / 2, this.yPositionOnScreen, false, inventory, null, -1, 3, 0, 0, true);
-            this.trashCan.myID = 106;
-            this.ItemsToGrabMenu.populateClickableComponentList();
-            for (int i = 0; i < this.ItemsToGrabMenu.inventory.Count; i++)
+            ItemsToGrabMenu = new InventoryMenu(xPositionOnScreen + Game1.tileSize / 2, yPositionOnScreen, false, inventory);
+            trashCan.myID = 106;
+            ItemsToGrabMenu.populateClickableComponentList();
+            foreach (ClickableComponent t in ItemsToGrabMenu.inventory)
             {
-                if (this.ItemsToGrabMenu.inventory[i] != null)
-                {
-                    ClickableComponent item = this.ItemsToGrabMenu.inventory[i];
-                    item.myID = item.myID + 53910;
-                    ClickableComponent clickableComponent = this.ItemsToGrabMenu.inventory[i];
-                    clickableComponent.upNeighborID = clickableComponent.upNeighborID + 53910;
-                    ClickableComponent item1 = this.ItemsToGrabMenu.inventory[i];
-                    item1.rightNeighborID = item1.rightNeighborID + 53910;
-                    this.ItemsToGrabMenu.inventory[i].downNeighborID = -7777;
-                    ClickableComponent clickableComponent1 = this.ItemsToGrabMenu.inventory[i];
-                    clickableComponent1.leftNeighborID = clickableComponent1.leftNeighborID + 53910;
-                    this.ItemsToGrabMenu.inventory[i].fullyImmutable = true;
-                }
+                if (t == null) continue;
+                ClickableComponent item = t;
+                item.myID = item.myID + 53910;
+                ClickableComponent clickableComponent = t;
+                clickableComponent.upNeighborID = clickableComponent.upNeighborID + 53910;
+                ClickableComponent item1 = t;
+                item1.rightNeighborID = item1.rightNeighborID + 53910;
+                t.downNeighborID = -7777;
+                ClickableComponent clickableComponent1 = t;
+                clickableComponent1.leftNeighborID = clickableComponent1.leftNeighborID + 53910;
+                t.fullyImmutable = true;
             }
             if (Game1.options.SnappyMenus)
             {
@@ -151,10 +149,10 @@ namespace ExtendedFridge
                 {
                     if (this.inventory != null && this.inventory.inventory != null && this.inventory.inventory.Count >= 12)
                     {
-                        this.inventory.inventory[j].upNeighborID = (this.shippingBin ? 12598 : -7777);
+                        this.inventory.inventory[j].upNeighborID = (ShippingBin ? 12598 : -7777);
                     }
                 }
-                if (!this.shippingBin)
+                if (!ShippingBin)
                 {
                     for (int k = 0; k < 36; k++)
                     {
@@ -165,16 +163,16 @@ namespace ExtendedFridge
                         }
                     }
                 }
-                if (this.trashCan != null)
+                if (trashCan != null)
                 {
-                    this.trashCan.leftNeighborID = 11;
+                    trashCan.leftNeighborID = 11;
                 }
-                if (this.okButton != null)
+                if (okButton != null)
                 {
-                    this.okButton.leftNeighborID = 11;
+                    okButton.leftNeighborID = 11;
                 }
-                base.populateClickableComponentList();
-                this.snapToDefaultClickableComponent();
+                populateClickableComponentList();
+                snapToDefaultClickableComponent();
             }
             this.inventory.showGrayedOutSlots = true;
         }
@@ -230,129 +228,126 @@ namespace ExtendedFridge
         //2. ItemGrabMenu.behaviorOnItemSelectFunction to FridgeGrabMenu.behaviorOnItemSelectFunction behaviorOnItemGrab
         //3. Add FridgeGrabMenu.behaviorOnPageCtlClick behaviorOnClickNextButton = null, FridgeGrabMenu.behaviorOnPageCtlClick behaviorOnClickPreviousButton = null, bool bShowPrevButton = false, bool bShowNextButton = false, FridgeGrabMenu.behaviorOnOrganizeItems behaviorOnClickOrganize = null at the end
         //DONE
-        public FridgeGrabMenu(IList<Item> inventory, bool reverseGrab, bool showReceivingMenu, InventoryMenu.highlightThisItem highlightFunction, FridgeGrabMenu.behaviorOnItemSelect behaviorOnItemSelectFunction, string message, FridgeGrabMenu.behaviorOnItemSelect behaviorOnItemGrab = null, bool snapToBottom = false, bool canBeExitedWithKey = false, bool playRightClickSound = true, bool allowRightClick = true, bool showOrganizeButton = false, int source = 0, Item sourceItem = null, int whichSpecialButton = -1, object specialObject = null, FridgeGrabMenu.behaviorOnPageCtlClick behaviorOnClickNextButton = null, FridgeGrabMenu.behaviorOnPageCtlClick behaviorOnClickPreviousButton = null, bool bShowPrevButton = false, bool bShowNextButton = false, FridgeGrabMenu.behaviorOnOrganizeItems behaviorOnClickOrganize = null) : base(highlightFunction, true, true, 0, 0)
+        public FridgeGrabMenu(IList<Item> inventory, bool reverseGrab, bool showReceivingMenu, InventoryMenu.highlightThisItem highlightFunction, BehaviorOnItemSelect behaviorOnItemSelectFunction, string message, BehaviorOnItemSelect behaviorOnItemGrab = null, bool snapToBottom = false, bool canBeExitedWithKey = false, bool playRightClickSound = true, bool allowRightClick = true, bool showOrganizeButton = false, int source = 0, Item sourceItem = null, int whichSpecialButton = -1, object specialObject = null, BehaviorOnPageCtlClick behaviorOnClickNextButton = null, BehaviorOnPageCtlClick behaviorOnClickPreviousButton = null, bool bShowPrevButton = false, bool bShowNextButton = false, BehaviorOnOrganizeItems behaviorOnClickOrganize = null) : base(highlightFunction, true, true)
 		{
-            int num;
-            int num1;
-            this.source = source;
-            this.message = message;
-            this.reverseGrab = reverseGrab;
-            this.showReceivingMenu = showReceivingMenu;
-            this.playRightClickSound = playRightClickSound;
-            this.allowRightClick = allowRightClick;
+		    Source = source;
+            _message = message;
+            ReverseGrab = reverseGrab;
+            ShowReceivingMenu = showReceivingMenu;
+            PlayRightClickSound = playRightClickSound;
+            AllowRightClick = allowRightClick;
             this.inventory.showGrayedOutSlots = true;
-            this.sourceItem = sourceItem;
+            _sourceItem = sourceItem;
 
             //M07
-            this.behaviorOnClickPreviousButton = behaviorOnClickPreviousButton;
-            this.behaviorOnClickNextButton = behaviorOnClickNextButton;
-            this.behaviorOnClickOrganize = behaviorOnClickOrganize;
+            BehaviorOnClickPreviousButton = behaviorOnClickPreviousButton;
+            BehaviorOnClickNextButton = behaviorOnClickNextButton;
+            BehaviorOnClickOrganize = behaviorOnClickOrganize;
             //END_M07
 
-            if (source == 1 && sourceItem != null && sourceItem is Chest)
+            if (source == 1 && sourceItem is Chest)
             {
-                this.chestColorPicker = new DiscreteColorPicker(this.xPositionOnScreen, this.yPositionOnScreen - Game1.tileSize - IClickableMenu.borderWidth * 2, 0, new Chest(true))
+                ChestColorPicker = new DiscreteColorPicker(xPositionOnScreen, yPositionOnScreen - Game1.tileSize - borderWidth * 2, 0, new Chest(true))
                 {
-                    colorSelection = this.chestColorPicker.getSelectionFromColor((sourceItem as Chest).playerChoiceColor.Value)
+                    colorSelection = ChestColorPicker.getSelectionFromColor((sourceItem as Chest).playerChoiceColor.Value)
                 };
-                (this.chestColorPicker.itemToDrawColored as Chest).playerChoiceColor.Value = this.chestColorPicker.getColorFromSelection(this.chestColorPicker.colorSelection);
-                ClickableTextureComponent clickableTextureComponent = new ClickableTextureComponent(new Microsoft.Xna.Framework.Rectangle(this.xPositionOnScreen + this.width, this.yPositionOnScreen + Game1.tileSize + Game1.pixelZoom * 5, 16 * Game1.pixelZoom, 16 * Game1.pixelZoom), Game1.mouseCursors, new Microsoft.Xna.Framework.Rectangle(119, 469, 16, 16), (float)Game1.pixelZoom, false)
+                (ChestColorPicker.itemToDrawColored as Chest).playerChoiceColor.Value = ChestColorPicker.getColorFromSelection(ChestColorPicker.colorSelection);
+                ClickableTextureComponent clickableTextureComponent = new ClickableTextureComponent(new Rectangle(xPositionOnScreen + width, yPositionOnScreen + Game1.tileSize + Game1.pixelZoom * 5, 16 * Game1.pixelZoom, 16 * Game1.pixelZoom), Game1.mouseCursors, new Rectangle(119, 469, 16, 16), Game1.pixelZoom)
                 {
                     hoverText = Game1.content.LoadString("Strings\\UI:Toggle_ColorPicker", new object[0]),
                     myID = 27346,
                     downNeighborID = (showOrganizeButton ? 106 : 5948),
                     leftNeighborID = 11
                 };
-                this.colorPickerToggleButton = clickableTextureComponent;
+                ColorPickerToggleButton = clickableTextureComponent;
             }
-            this.whichSpecialButton = whichSpecialButton;
-            this.specialObject = specialObject;
+            WhichSpecialButton = whichSpecialButton;
+            SpecialObject = specialObject;
             if (whichSpecialButton == 1)
             {
-                this.specialButton = new ClickableTextureComponent(new Microsoft.Xna.Framework.Rectangle(this.xPositionOnScreen + this.width, this.yPositionOnScreen + Game1.tileSize + Game1.pixelZoom * 5, 16 * Game1.pixelZoom, 16 * Game1.pixelZoom), Game1.mouseCursors, new Microsoft.Xna.Framework.Rectangle(108, 491, 16, 16), (float)Game1.pixelZoom, false)
+                SpecialButton = new ClickableTextureComponent(new Rectangle(xPositionOnScreen + width, yPositionOnScreen + Game1.tileSize + Game1.pixelZoom * 5, 16 * Game1.pixelZoom, 16 * Game1.pixelZoom), Game1.mouseCursors, new Rectangle(108, 491, 16, 16), Game1.pixelZoom)
                 {
                     myID = 12485,
                     downNeighborID = (showOrganizeButton ? 106 : 5948)
                 };
-                if (specialObject != null && specialObject is JunimoHut)
+                if (specialObject is JunimoHut)
                 {
-                    this.specialButton.sourceRect.X = ((specialObject as JunimoHut).noHarvest.Value ? 124 : 108);
+                    SpecialButton.sourceRect.X = ((specialObject as JunimoHut).noHarvest.Value ? 124 : 108);
                 }
             }
             if (snapToBottom)
             {
-                base.movePosition(0, Game1.viewport.Height - (this.yPositionOnScreen + this.height - IClickableMenu.spaceToClearTopBorder));
-                this.snappedtoBottom = true;
+                movePosition(0, Game1.viewport.Height - (yPositionOnScreen + height - spaceToClearTopBorder));
+                _snappedtoBottom = true;
             }
             //new InventoryMenu(this.xPositionOnScreen + Game1.tileSize / 2, this.yPositionOnScreen, false, inventory, highlightFunction)
-            this.ItemsToGrabMenu = new InventoryMenu(this.xPositionOnScreen + Game1.tileSize / 2, this.yPositionOnScreen, false, inventory, highlightFunction, -1, 3, 0, 0, true);
+            ItemsToGrabMenu = new InventoryMenu(xPositionOnScreen + Game1.tileSize / 2, yPositionOnScreen, false, inventory, highlightFunction);
             if (Game1.options.SnappyMenus)
             {
-                this.ItemsToGrabMenu.populateClickableComponentList();
-                for (int i = 0; i < this.ItemsToGrabMenu.inventory.Count; i++)
+                ItemsToGrabMenu.populateClickableComponentList();
+                foreach (ClickableComponent t in ItemsToGrabMenu.inventory)
                 {
-                    if (this.ItemsToGrabMenu.inventory[i] != null)
-                    {
-                        ClickableComponent item = this.ItemsToGrabMenu.inventory[i];
-                        item.myID = item.myID + 53910;
-                        ClickableComponent clickableComponent = this.ItemsToGrabMenu.inventory[i];
-                        clickableComponent.upNeighborID = clickableComponent.upNeighborID + 53910;
-                        ClickableComponent item1 = this.ItemsToGrabMenu.inventory[i];
-                        item1.rightNeighborID = item1.rightNeighborID + 53910;
-                        this.ItemsToGrabMenu.inventory[i].downNeighborID = -7777;
-                        ClickableComponent clickableComponent1 = this.ItemsToGrabMenu.inventory[i];
-                        clickableComponent1.leftNeighborID = clickableComponent1.leftNeighborID + 53910;
-                        this.ItemsToGrabMenu.inventory[i].fullyImmutable = true;
-                    }
+                    if (t == null) continue;
+                    ClickableComponent item = t;
+                    item.myID = item.myID + 53910;
+                    ClickableComponent clickableComponent = t;
+                    clickableComponent.upNeighborID = clickableComponent.upNeighborID + 53910;
+                    ClickableComponent item1 = t;
+                    item1.rightNeighborID = item1.rightNeighborID + 53910;
+                    t.downNeighborID = -7777;
+                    ClickableComponent clickableComponent1 = t;
+                    clickableComponent1.leftNeighborID = clickableComponent1.leftNeighborID + 53910;
+                    t.fullyImmutable = true;
                 }
             }
-            this.behaviorFunction = behaviorOnItemSelectFunction;
-            this.behaviorOnItemGrab = behaviorOnItemGrab;
-            this.canExitOnKey = canBeExitedWithKey;
+            BehaviorFunction = behaviorOnItemSelectFunction;
+            BehaviorOnItemGrab = behaviorOnItemGrab;
+            CanExitOnKey = canBeExitedWithKey;
 
             //M07
-            this.previousPageButton = new ClickableTextureComponent("", new Rectangle(this.xPositionOnScreen + this.width + Game1.tileSize, (this.yPositionOnScreen + this.height / 3 - Game1.tileSize) + 2, Game1.tileSize, Game1.tileSize), "", "Previous Page", Game1.mouseCursors, new Rectangle(352, 494, 12, 12), (float)Game1.pixelZoom);
-            this.nextPageButton = new ClickableTextureComponent("", new Rectangle(this.xPositionOnScreen + this.width + 2 * Game1.tileSize, (this.yPositionOnScreen + this.height / 3 - Game1.tileSize) + 2, Game1.tileSize, Game1.tileSize), "", "Next Page", Game1.mouseCursors, new Rectangle(365, 494, 12, 12), (float)Game1.pixelZoom);
+            _previousPageButton = new ClickableTextureComponent("", new Rectangle(xPositionOnScreen + width + Game1.tileSize, (yPositionOnScreen + height / 3 - Game1.tileSize) + 2, Game1.tileSize, Game1.tileSize), "", "Previous Page", Game1.mouseCursors, new Rectangle(352, 494, 12, 12), Game1.pixelZoom);
+            _nextPageButton = new ClickableTextureComponent("", new Rectangle(xPositionOnScreen + width + 2 * Game1.tileSize, (yPositionOnScreen + height / 3 - Game1.tileSize) + 2, Game1.tileSize, Game1.tileSize), "", "Next Page", Game1.mouseCursors, new Rectangle(365, 494, 12, 12), Game1.pixelZoom);
 
-            this.showPrevButton = bShowPrevButton;
-            this.showNextButton = bShowNextButton;
+            _showPrevButton = bShowPrevButton;
+            _showNextButton = bShowNextButton;
             //END_M07
 
             if (showOrganizeButton)
             {
-                ClickableTextureComponent clickableTextureComponent1 = new ClickableTextureComponent("", new Microsoft.Xna.Framework.Rectangle(this.xPositionOnScreen + this.width, this.yPositionOnScreen + this.height / 3 - Game1.tileSize, Game1.tileSize, Game1.tileSize), "", Game1.content.LoadString("Strings\\UI:ItemGrab_Organize", new object[0]), Game1.mouseCursors, new Microsoft.Xna.Framework.Rectangle(162, 440, 16, 16), (float)Game1.pixelZoom, false)
+                ClickableTextureComponent clickableTextureComponent1 = new ClickableTextureComponent("", new Rectangle(xPositionOnScreen + width, yPositionOnScreen + height / 3 - Game1.tileSize, Game1.tileSize, Game1.tileSize), "", Game1.content.LoadString("Strings\\UI:ItemGrab_Organize", new object[0]), Game1.mouseCursors, new Rectangle(162, 440, 16, 16), Game1.pixelZoom)
                 {
                     myID = 106
                 };
-                if (this.colorPickerToggleButton != null)
+                int num1;
+                if (ColorPickerToggleButton != null)
                 {
                     num1 = 27346;
                 }
                 else
                 {
-                    num1 = (this.specialButton != null ? 12485 : -500);
+                    num1 = (SpecialButton != null ? 12485 : -500);
                 }
                 clickableTextureComponent1.upNeighborID = num1;
                 clickableTextureComponent1.downNeighborID = 5948;
-                this.organizeButton = clickableTextureComponent1;
+                OrganizeButton = clickableTextureComponent1;
             }
-            if ((Game1.isAnyGamePadButtonBeingPressed() || !Game1.lastCursorMotionWasMouse) && this.ItemsToGrabMenu.actualInventory.Count > 0 && Game1.activeClickableMenu == null)
+            if ((Game1.isAnyGamePadButtonBeingPressed() || !Game1.lastCursorMotionWasMouse) && ItemsToGrabMenu.actualInventory.Count > 0 && Game1.activeClickableMenu == null)
             {
                 Game1.setMousePosition(this.inventory.inventory[0].bounds.Center);
             }
             if (Game1.options.snappyMenus && Game1.options.gamepadControls)
             {
-                if (this.chestColorPicker != null)
+                if (ChestColorPicker != null)
                 {
-                    this.discreteColorPickerCC = new List<ClickableComponent>();
-                    for (int j = 0; j < this.chestColorPicker.totalColors; j++)
+                    DiscreteColorPickerCc = new List<ClickableComponent>();
+                    for (int j = 0; j < ChestColorPicker.totalColors; j++)
                     {
-                        this.discreteColorPickerCC.Add(new ClickableComponent(new Microsoft.Xna.Framework.Rectangle(this.chestColorPicker.xPositionOnScreen + IClickableMenu.borderWidth / 2 + j * 9 * Game1.pixelZoom, this.chestColorPicker.yPositionOnScreen + IClickableMenu.borderWidth / 2, 9 * Game1.pixelZoom, 7 * Game1.pixelZoom), "")
+                        DiscreteColorPickerCc.Add(new ClickableComponent(new Rectangle(ChestColorPicker.xPositionOnScreen + borderWidth / 2 + j * 9 * Game1.pixelZoom, ChestColorPicker.yPositionOnScreen + borderWidth / 2, 9 * Game1.pixelZoom, 7 * Game1.pixelZoom), "")
                         {
                             myID = j + 4343,
-                            rightNeighborID = (j < this.chestColorPicker.totalColors - 1 ? j + 4343 + 1 : -1),
+                            rightNeighborID = (j < ChestColorPicker.totalColors - 1 ? j + 4343 + 1 : -1),
                             leftNeighborID = (j > 0 ? j + 4343 - 1 : -1),
-                            downNeighborID = (this.ItemsToGrabMenu == null || this.ItemsToGrabMenu.inventory.Count <= 0 ? 0 : 53910)
+                            downNeighborID = (ItemsToGrabMenu == null || ItemsToGrabMenu.inventory.Count <= 0 ? 0 : 53910)
                         });
                     }
                 }
@@ -361,13 +356,14 @@ namespace ExtendedFridge
                     if (this.inventory != null && this.inventory.inventory != null && this.inventory.inventory.Count >= 12)
                     {
                         ClickableComponent item2 = this.inventory.inventory[k];
-                        if (this.shippingBin)
+                        int num;
+                        if (ShippingBin)
                         {
                             num = 12598;
                         }
-                        else if (this.discreteColorPickerCC == null || this.ItemsToGrabMenu == null || this.ItemsToGrabMenu.inventory.Count > k)
+                        else if (DiscreteColorPickerCc == null || ItemsToGrabMenu == null || ItemsToGrabMenu.inventory.Count > k)
                         {
-                            num = (this.ItemsToGrabMenu.inventory.Count > k ? 53910 + k : 53910);
+                            num = (ItemsToGrabMenu.inventory.Count > k ? 53910 + k : 53910);
                         }
                         else
                         {
@@ -375,12 +371,12 @@ namespace ExtendedFridge
                         }
                         item2.upNeighborID = num;
                     }
-                    if (this.discreteColorPickerCC != null && this.ItemsToGrabMenu != null && this.ItemsToGrabMenu.inventory.Count > k)
+                    if (DiscreteColorPickerCc != null && ItemsToGrabMenu != null && ItemsToGrabMenu.inventory.Count > k)
                     {
-                        this.ItemsToGrabMenu.inventory[k].upNeighborID = 4343;
+                        ItemsToGrabMenu.inventory[k].upNeighborID = 4343;
                     }
                 }
-                if (!this.shippingBin)
+                if (!ShippingBin)
                 {
                     for (int l = 0; l < 36; l++)
                     {
@@ -391,28 +387,28 @@ namespace ExtendedFridge
                         }
                     }
                 }
-                if (this.trashCan != null && this.inventory.inventory.Count >= 12 && this.inventory.inventory[11] != null)
+                if (trashCan != null && this.inventory.inventory.Count >= 12 && this.inventory.inventory[11] != null)
                 {
                     this.inventory.inventory[11].rightNeighborID = 5948;
                 }
-                if (this.trashCan != null)
+                if (trashCan != null)
                 {
-                    this.trashCan.leftNeighborID = 11;
+                    trashCan.leftNeighborID = 11;
                 }
-                if (this.okButton != null)
+                if (okButton != null)
                 {
-                    this.okButton.leftNeighborID = 11;
+                    okButton.leftNeighborID = 11;
                 }
-                base.populateClickableComponentList();
-                this.snapToDefaultClickableComponent();
+                populateClickableComponentList();
+                snapToDefaultClickableComponent();
             }
         }
 
         //NOMOD
-        public void initializeShippingBin()
+        public void InitializeShippingBin()
         {
-            this.shippingBin = true;
-            this.lastShippedHolder = new ClickableTextureComponent("", new Microsoft.Xna.Framework.Rectangle(this.xPositionOnScreen + this.width / 2 - 12 * Game1.pixelZoom, this.yPositionOnScreen + this.height / 2 - 20 * Game1.pixelZoom - Game1.tileSize, 24 * Game1.pixelZoom, 24 * Game1.pixelZoom), "", Game1.content.LoadString("Strings\\UI:ShippingBin_LastItem", new object[0]), Game1.mouseCursors, new Microsoft.Xna.Framework.Rectangle(293, 360, 24, 24), (float)Game1.pixelZoom, false)
+            ShippingBin = true;
+            LastShippedHolder = new ClickableTextureComponent("", new Rectangle(xPositionOnScreen + width / 2 - 12 * Game1.pixelZoom, yPositionOnScreen + height / 2 - 20 * Game1.pixelZoom - Game1.tileSize, 24 * Game1.pixelZoom, 24 * Game1.pixelZoom), "", Game1.content.LoadString("Strings\\UI:ShippingBin_LastItem", new object[0]), Game1.mouseCursors, new Rectangle(293, 360, 24, 24), Game1.pixelZoom)
             {
                 myID = 12598,
                 region = 12598
@@ -421,30 +417,30 @@ namespace ExtendedFridge
             {
                 for (int i = 0; i < 12; i++)
                 {
-                    if (this.inventory != null && this.inventory.inventory != null && this.inventory.inventory.Count >= 12)
+                    if (inventory != null && inventory.inventory != null && inventory.inventory.Count >= 12)
                     {
-                        this.inventory.inventory[i].upNeighborID = -7777;
+                        inventory.inventory[i].upNeighborID = -7777;
                         if (i == 11)
                         {
-                            this.inventory.inventory[i].rightNeighborID = 5948;
+                            inventory.inventory[i].rightNeighborID = 5948;
                         }
                     }
                 }
-                base.populateClickableComponentList();
-                this.snapToDefaultClickableComponent();
+                populateClickableComponentList();
+                snapToDefaultClickableComponent();
             }
         }
 
         //NOMOD
-        public void setBackgroundTransparency(bool b)
+        public void SetBackgroundTransparency(bool b)
         {
-            this.drawBG = b;
+            DrawBg = b;
         }
 
         //NOMOD
-        public void setDestroyItemOnClick(bool b)
+        public void SetDestroyItemOnClick(bool b)
         {
-            this.destroyItemOnClick = b;
+            DestroyItemOnClick = b;
         }
         #region "Old Code"
         //WAS:
@@ -506,41 +502,41 @@ namespace ExtendedFridge
         //DONE
         public override void receiveRightClick(int x, int y, bool playSound = true)
         {
-            if (!this.allowRightClick)
+            if (!AllowRightClick)
             {
                 return;
             }
-            base.receiveRightClick(x, y, (!playSound ? false : this.playRightClickSound));
-            if (this.heldItem == null && this.showReceivingMenu)
+            base.receiveRightClick(x, y, (playSound && PlayRightClickSound));
+            if (heldItem == null && ShowReceivingMenu)
             {
-                this.heldItem = this.ItemsToGrabMenu.rightClick(x, y, this.heldItem, false);
-                if (this.heldItem != null && this.behaviorOnItemGrab != null)
+                heldItem = ItemsToGrabMenu.rightClick(x, y, heldItem, false);
+                if (heldItem != null && BehaviorOnItemGrab != null && Game1.activeClickableMenu is ItemGrabMenu itm)
                 {
-                    this.behaviorOnItemGrab(this.heldItem, Game1.player);
-                    if (Game1.activeClickableMenu != null && Game1.activeClickableMenu is ItemGrabMenu)
+                    BehaviorOnItemGrab(heldItem, Game1.player);
+                    if (Game1.activeClickableMenu != null)
                     {
-                        (Game1.activeClickableMenu as ItemGrabMenu).setSourceItem(this.sourceItem);
+                        itm.setSourceItem(_sourceItem);
                     }
                     if (Game1.options.SnappyMenus)
                     {
-                        (Game1.activeClickableMenu as ItemGrabMenu).currentlySnappedComponent = this.currentlySnappedComponent;
-                        (Game1.activeClickableMenu as ItemGrabMenu).snapCursorToCurrentSnappedComponent();
+                        itm.currentlySnappedComponent = currentlySnappedComponent;
+                        itm.snapCursorToCurrentSnappedComponent();
                     }
                 }
-                if (this.heldItem is StardewValley.Object && (this.heldItem as StardewValley.Object).ParentSheetIndex == 326)
+                if (heldItem is Object && (heldItem as Object).ParentSheetIndex == 326)
                 {
-                    this.heldItem = null;
+                    heldItem = null;
                     Game1.player.canUnderstandDwarves = true;
                     //this.poof = new TemporaryAnimatedSprite(Game1.animations, new Microsoft.Xna.Framework.Rectangle(0, 320, 64, 64), 50f, 8, 0, new Vector2((float)(x - x % Game1.tileSize + Game1.tileSize / 4), (float)(y - y % Game1.tileSize + Game1.tileSize / 4)), false, false);
                     Game1.playSound("fireball");
                     return;
                 }
-                if (this.heldItem is StardewValley.Object && (this.heldItem as StardewValley.Object).IsRecipe)
+                if (heldItem is Object && (heldItem as Object).IsRecipe)
                 {
-                    string str = this.heldItem.Name.Substring(0, this.heldItem.Name.IndexOf("Recipe") - 1);
+                    string str = heldItem.Name.Substring(0, heldItem.Name.IndexOf("Recipe", StringComparison.Ordinal) - 1);
                     try
                     {
-                        if ((this.heldItem as StardewValley.Object).Category != -7)
+                        if ((heldItem as Object).Category != -7)
                         {
                             Game1.player.craftingRecipes.Add(str, 0);
                         }
@@ -553,52 +549,48 @@ namespace ExtendedFridge
                     }
                     catch (Exception exception)
                     {
+                        ExtendedFridgeMod.Instance.Monitor.Log($"Error: {exception}", LogLevel.Trace);
                     }
-                    this.heldItem = null;
+                    heldItem = null;
                     return;
                 }
-                if (Game1.player.addItemToInventoryBool(this.heldItem, false))
+                if (Game1.player.addItemToInventoryBool(heldItem))
                 {
-                    this.heldItem = null;
+                    heldItem = null;
                     Game1.playSound("coin");
-                    return;
                 }
             }
-            else if (this.reverseGrab || this.behaviorFunction != null)
+            else if (ReverseGrab || BehaviorFunction != null)
             {
-                this.behaviorFunction(this.heldItem, Game1.player);
+                BehaviorFunction(heldItem, Game1.player);
                 if (Game1.activeClickableMenu != null && Game1.activeClickableMenu is ItemGrabMenu)
                 {
-                    (Game1.activeClickableMenu as ItemGrabMenu).setSourceItem(this.sourceItem);
+                    ((ItemGrabMenu) Game1.activeClickableMenu).setSourceItem(_sourceItem);
                 }
-                if (this.destroyItemOnClick)
+                if (DestroyItemOnClick)
                 {
-                    this.heldItem = null;
-                    return;
+                    heldItem = null;
                 }
             }
         }
 
         //DONE
-        public override void gameWindowSizeChanged(Microsoft.Xna.Framework.Rectangle oldBounds, Microsoft.Xna.Framework.Rectangle newBounds)
+        public override void gameWindowSizeChanged(Rectangle oldBounds, Rectangle newBounds)
         {
-            if (this.snappedtoBottom)
+            if (_snappedtoBottom)
             {
-                base.movePosition((newBounds.Width - oldBounds.Width) / 2, Game1.viewport.Height - (this.yPositionOnScreen + this.height - IClickableMenu.spaceToClearTopBorder));
+                movePosition((newBounds.Width - oldBounds.Width) / 2, Game1.viewport.Height - (yPositionOnScreen + height - spaceToClearTopBorder));
             }
-            if (this.ItemsToGrabMenu != null)
+            ItemsToGrabMenu?.gameWindowSizeChanged(oldBounds, newBounds);
+            if (OrganizeButton != null)
             {
-                this.ItemsToGrabMenu.gameWindowSizeChanged(oldBounds, newBounds);
+                OrganizeButton = new ClickableTextureComponent("", new Rectangle(xPositionOnScreen + width, yPositionOnScreen + height / 3 - Game1.tileSize, Game1.tileSize, Game1.tileSize), "", Game1.content.LoadString("Strings\\UI:ItemGrab_Organize", new object[0]), Game1.mouseCursors, new Rectangle(162, 440, 16, 16), Game1.pixelZoom);
             }
-            if (this.organizeButton != null)
+            if (Source == 1 && _sourceItem is Chest)
             {
-                this.organizeButton = new ClickableTextureComponent("", new Microsoft.Xna.Framework.Rectangle(this.xPositionOnScreen + this.width, this.yPositionOnScreen + this.height / 3 - Game1.tileSize, Game1.tileSize, Game1.tileSize), "", Game1.content.LoadString("Strings\\UI:ItemGrab_Organize", new object[0]), Game1.mouseCursors, new Microsoft.Xna.Framework.Rectangle(162, 440, 16, 16), (float)Game1.pixelZoom, false);
-            }
-            if (this.source == 1 && this.sourceItem != null && this.sourceItem is Chest)
-            {
-                this.chestColorPicker = new DiscreteColorPicker(this.xPositionOnScreen, this.yPositionOnScreen - Game1.tileSize - IClickableMenu.borderWidth * 2, 0, null)
+                ChestColorPicker = new DiscreteColorPicker(xPositionOnScreen, yPositionOnScreen - Game1.tileSize - borderWidth * 2)
                 {
-                    colorSelection = this.chestColorPicker.getSelectionFromColor((this.sourceItem as Chest).playerChoiceColor.Value)
+                    colorSelection = ChestColorPicker.getSelectionFromColor(((Chest) _sourceItem).playerChoiceColor.Value)
                 };
             }
         }
@@ -606,10 +598,10 @@ namespace ExtendedFridge
         //DONE
         public override void receiveLeftClick(int x, int y, bool playSound = true)
         {
-            base.receiveLeftClick(x, y, (!this.destroyItemOnClick));
-            if (this.shippingBin && this.lastShippedHolder.containsPoint(x, y))
+            base.receiveLeftClick(x, y, (!DestroyItemOnClick));
+            if (ShippingBin && LastShippedHolder.containsPoint(x, y))
             {
-                if (Game1.getFarm().lastItemShipped != null && Game1.player.addItemToInventoryBool(Game1.getFarm().lastItemShipped, false))
+                if (Game1.getFarm().lastItemShipped != null && Game1.player.addItemToInventoryBool(Game1.getFarm().lastItemShipped))
                 {
                     Game1.playSound("coin");
                     Game1.getFarm().shippingBin.Remove(Game1.getFarm().lastItemShipped);
@@ -622,71 +614,72 @@ namespace ExtendedFridge
                 }
                 return;
             }
-            if (this.chestColorPicker != null)
+            if (ChestColorPicker != null)
             {
-                this.chestColorPicker.receiveLeftClick(x, y, true);
-                if (this.sourceItem != null && this.sourceItem is Chest)
+                ChestColorPicker.receiveLeftClick(x, y);
+                if (_sourceItem is Chest item)
                 {
-                    (this.sourceItem as Chest).playerChoiceColor.Value = this.chestColorPicker.getColorFromSelection(this.chestColorPicker.colorSelection);
+                    item.playerChoiceColor.Value = ChestColorPicker.getColorFromSelection(ChestColorPicker.colorSelection);
                 }
             }
-            if (this.colorPickerToggleButton != null && this.colorPickerToggleButton.containsPoint(x, y))
+            if (ColorPickerToggleButton != null && ColorPickerToggleButton.containsPoint(x, y))
             {
                 Game1.player.showChestColorPicker = !Game1.player.showChestColorPicker;
-                this.chestColorPicker.visible = Game1.player.showChestColorPicker;
+                if (ChestColorPicker != null) ChestColorPicker.visible = Game1.player.showChestColorPicker;
                 try
                 {
                     Game1.playSound("drumkit6");
                 }
                 catch (Exception exception)
                 {
+                    ExtendedFridgeMod.Instance.Monitor.Log($"Error: {exception}", LogLevel.Trace);
                 }
             }
-            if (this.whichSpecialButton != -1 && this.specialButton != null && this.specialButton.containsPoint(x, y))
+            if (WhichSpecialButton != -1 && SpecialButton != null && SpecialButton.containsPoint(x, y))
             {
                 Game1.playSound("drumkit6");
-                if (this.whichSpecialButton == 1 && this.specialObject != null && this.specialObject is JunimoHut)
+                if (WhichSpecialButton == 1 && SpecialObject is JunimoHut)
                 {
-                    (this.specialObject as JunimoHut).noHarvest.Value = !(this.specialObject as JunimoHut).noHarvest.Value;
-                    this.specialButton.sourceRect.X = ((this.specialObject as JunimoHut).noHarvest.Value ? 124 : 108);
+                    (SpecialObject as JunimoHut).noHarvest.Value = !((JunimoHut) SpecialObject).noHarvest.Value;
+                    SpecialButton.sourceRect.X = (((JunimoHut) SpecialObject).noHarvest.Value ? 124 : 108);
                 }
             }
-            if (this.heldItem == null && this.showReceivingMenu)
+            if (heldItem == null && ShowReceivingMenu)
             {
-                this.heldItem = this.ItemsToGrabMenu.leftClick(x, y, this.heldItem, false);
-                if (this.heldItem != null && this.behaviorOnItemGrab != null)
+                heldItem = ItemsToGrabMenu.leftClick(x, y, heldItem, false);
+                if (heldItem != null && BehaviorOnItemGrab != null)
                 {
-                    this.behaviorOnItemGrab(this.heldItem, Game1.player);
+                    BehaviorOnItemGrab(heldItem, Game1.player);
                     if (Game1.activeClickableMenu != null && Game1.activeClickableMenu is ItemGrabMenu)
                     {
-                        (Game1.activeClickableMenu as ItemGrabMenu).setSourceItem(this.sourceItem);
+                        ((ItemGrabMenu) Game1.activeClickableMenu).setSourceItem(_sourceItem);
                         if (Game1.options.SnappyMenus)
                         {
-                            (Game1.activeClickableMenu as ItemGrabMenu).currentlySnappedComponent = this.currentlySnappedComponent;
-                            (Game1.activeClickableMenu as ItemGrabMenu).snapCursorToCurrentSnappedComponent();
+                            ((ItemGrabMenu) Game1.activeClickableMenu).currentlySnappedComponent = currentlySnappedComponent;
+                            ((ItemGrabMenu) Game1.activeClickableMenu).snapCursorToCurrentSnappedComponent();
                         }
                     }
                 }
-                if (this.heldItem is StardewValley.Object && (this.heldItem as StardewValley.Object).ParentSheetIndex == 326)
+                if (heldItem is Object && (heldItem as Object).ParentSheetIndex == 326)
                 {
-                    this.heldItem = null;
+                    heldItem = null;
                     Game1.player.canUnderstandDwarves = true;
                     //this.poof = new TemporaryAnimatedSprite(Game1.animations, new Microsoft.Xna.Framework.Rectangle(0, 320, 64, 64), 50f, 8, 0, new Vector2((float)(x - x % Game1.tileSize + Game1.tileSize / 4), (float)(y - y % Game1.tileSize + Game1.tileSize / 4)), false, false);
                     Game1.playSound("fireball");
                 }
-                else if (this.heldItem is StardewValley.Object && (this.heldItem as StardewValley.Object).ParentSheetIndex == 102)
+                else if (heldItem is Object && (heldItem as Object).ParentSheetIndex == 102)
                 {
-                    this.heldItem = null;
+                    heldItem = null;
                     Game1.player.foundArtifact(102, 1);
                     //this.poof = new TemporaryAnimatedSprite(Game1.animations, new Microsoft.Xna.Framework.Rectangle(0, 320, 64, 64), 50f, 8, 0, new Vector2((float)(x - x % Game1.tileSize + Game1.tileSize / 4), (float)(y - y % Game1.tileSize + Game1.tileSize / 4)), false, false);
                     Game1.playSound("fireball");
                 }
-                else if (this.heldItem is StardewValley.Object && (this.heldItem as StardewValley.Object).IsRecipe)
+                else if (heldItem is Object && (heldItem as Object).IsRecipe)
                 {
-                    string str = this.heldItem.Name.Substring(0, this.heldItem.Name.IndexOf("Recipe") - 1);
+                    string str = heldItem.Name.Substring(0, heldItem.Name.IndexOf("Recipe", StringComparison.Ordinal) - 1);
                     try
                     {
-                        if ((this.heldItem as StardewValley.Object).Category != -7)
+                        if ((heldItem as Object).Category != -7)
                         {
                             Game1.player.craftingRecipes.Add(str, 0);
                         }
@@ -699,86 +692,77 @@ namespace ExtendedFridge
                     }
                     catch (Exception exception1)
                     {
+                        ExtendedFridgeMod.Instance.Monitor.Log($"Error: {exception1}", LogLevel.Trace);
                     }
-                    this.heldItem = null;
+                    heldItem = null;
                 }
-                else if (Game1.player.addItemToInventoryBool(this.heldItem, false))
+                else if (Game1.player.addItemToInventoryBool(heldItem))
                 {
-                    this.heldItem = null;
+                    heldItem = null;
                     Game1.playSound("coin");
                 }
             }
-            else if ((this.reverseGrab || this.behaviorFunction != null) && this.isWithinBounds(x, y))
+            else if ((ReverseGrab || BehaviorFunction != null) && isWithinBounds(x, y))
             {
-                this.behaviorFunction(this.heldItem, Game1.player);
+                BehaviorFunction(heldItem, Game1.player);
                 if (Game1.activeClickableMenu != null && Game1.activeClickableMenu is ItemGrabMenu)
                 {
-                    (Game1.activeClickableMenu as ItemGrabMenu).setSourceItem(this.sourceItem);
+                    ((ItemGrabMenu) Game1.activeClickableMenu).setSourceItem(_sourceItem);
                     if (Game1.options.SnappyMenus)
                     {
-                        (Game1.activeClickableMenu as ItemGrabMenu).currentlySnappedComponent = this.currentlySnappedComponent;
-                        (Game1.activeClickableMenu as ItemGrabMenu).snapCursorToCurrentSnappedComponent();
+                        ((ItemGrabMenu) Game1.activeClickableMenu).currentlySnappedComponent = currentlySnappedComponent;
+                        ((ItemGrabMenu) Game1.activeClickableMenu).snapCursorToCurrentSnappedComponent();
                     }
                 }
-                if (this.destroyItemOnClick)
+                if (DestroyItemOnClick)
                 {
-                    this.heldItem = null;
+                    heldItem = null;
                     return;
                 }
             }
-            if (this.organizeButton != null && this.organizeButton.containsPoint(x, y))
+            if (OrganizeButton != null && OrganizeButton.containsPoint(x, y))
             {
-                ItemGrabMenu.organizeItemsInList(M007_ExtendedFridge_Mod.organize());
+                ItemGrabMenu.organizeItemsInList(ExtendedFridgeMod.Organize());
                 //ItemGrabMenu.organizeItemsInList(this.ItemsToGrabMenu.actualInventory);
-                Game1.activeClickableMenu = new FridgeGrabMenu(this.ItemsToGrabMenu.actualInventory, false, true, new InventoryMenu.highlightThisItem(InventoryMenu.highlightAllItems), this.behaviorFunction, null, this.behaviorOnItemGrab, false, true, true, true, true, this.source, this.sourceItem, -1, null);
+                Game1.activeClickableMenu = new FridgeGrabMenu(ItemsToGrabMenu.actualInventory, false, true, InventoryMenu.highlightAllItems, BehaviorFunction, null, BehaviorOnItemGrab, false, true, true, true, true, Source, _sourceItem);
                 Game1.playSound("Ship");
                 return;
             }
 
-            if (this.previousPageButton != null && this.previousPageButton.containsPoint(x, y) && this.behaviorOnClickPreviousButton != null)
+            if (_previousPageButton != null && _previousPageButton.containsPoint(x, y) && BehaviorOnClickPreviousButton != null)
             {
-                this.behaviorOnClickPreviousButton();
+                BehaviorOnClickPreviousButton();
                 Game1.playSound("Ship");
                 return;
             }
 
-            if (this.nextPageButton != null && this.nextPageButton.containsPoint(x, y) && this.behaviorOnClickNextButton != null)
+            if (_nextPageButton != null && _nextPageButton.containsPoint(x, y) && BehaviorOnClickNextButton != null)
             {
-                this.behaviorOnClickNextButton();
+                BehaviorOnClickNextButton();
                 Game1.playSound("Ship");
                 return;
             }
 
-            if (this.heldItem != null && !this.isWithinBounds(x, y) && this.heldItem.canBeTrashed())
+            if (heldItem != null && !isWithinBounds(x, y) && heldItem.canBeTrashed())
             {
                 Game1.playSound("throwDownITem");
-                Game1.createItemDebris(this.heldItem, Game1.player.getStandingPosition(), Game1.player.FacingDirection, null);
-                if (this.inventory.onAddItem != null)
-                {
-                    this.inventory.onAddItem(this.heldItem, Game1.player);
-                }
-                this.heldItem = null;
+                Game1.createItemDebris(heldItem, Game1.player.getStandingPosition(), Game1.player.FacingDirection);
+                inventory.onAddItem?.Invoke(heldItem, Game1.player);
+                heldItem = null;
             }
         }
 
         //NOMOD
-        public static void organizeItemsInList(IList<Item> items)
+        public static void OrganizeItemsInList(IList<Item> items)
         {
             items.ToList().Sort();
             items.ToList().Reverse();
         }
 
         //NOMOD
-        public bool areAllItemsTaken()
+        public bool AreAllItemsTaken()
         {
-            for (int i = 0; i < this.ItemsToGrabMenu.actualInventory.Count; i++)
-            {
-                if (this.ItemsToGrabMenu.actualInventory[i] != null)
-                {
-                    return false;
-                }
-            }
-            return true;
+            return ItemsToGrabMenu.actualInventory.All(t => t == null);
         }
 
         //DONE
@@ -786,28 +770,28 @@ namespace ExtendedFridge
         {
             if (Game1.options.snappyMenus && Game1.options.gamepadControls)
             {
-                base.applyMovementKey(key);
+                applyMovementKey(key);
             }
-            if ((this.canExitOnKey || this.areAllItemsTaken()) && Game1.options.doesInputListContain(Game1.options.menuButton, key) && this.readyToClose())
+            if ((CanExitOnKey || AreAllItemsTaken()) && Game1.options.doesInputListContain(Game1.options.menuButton, key) && readyToClose())
             {
-                base.exitThisMenu(true);
+                exitThisMenu();
                 if (Game1.currentLocation.currentEvent != null)
                 {
                     Event currentCommand = Game1.currentLocation.currentEvent;
                     currentCommand.CurrentCommand = currentCommand.CurrentCommand + 1;
                 }
             }
-            else if (Game1.options.doesInputListContain(Game1.options.menuButton, key) && this.heldItem != null)
+            else if (Game1.options.doesInputListContain(Game1.options.menuButton, key) && heldItem != null)
             {
-                Game1.setMousePosition(this.trashCan.bounds.Center);
+                Game1.setMousePosition(trashCan.bounds.Center);
             }
-            if (key == Keys.Delete && this.heldItem != null && this.heldItem.canBeTrashed())
+            if (key == Keys.Delete && heldItem != null && heldItem.canBeTrashed())
             {
-                if (this.heldItem is StardewValley.Object && Game1.player.specialItems.Contains((this.heldItem as StardewValley.Object).ParentSheetIndex))
+                if (heldItem is Object && Game1.player.specialItems.Contains(((Object) heldItem).ParentSheetIndex))
                 {
-                    Game1.player.specialItems.Remove((this.heldItem as StardewValley.Object).ParentSheetIndex);
+                    Game1.player.specialItems.Remove(((Object) heldItem).ParentSheetIndex);
                 }
-                this.heldItem = null;
+                heldItem = null;
                 Game1.playSound("trashcan");
             }
         }
@@ -816,158 +800,149 @@ namespace ExtendedFridge
         public override void update(GameTime time)
         {
             base.update(time);
-            if (this.poof != null && this.poof.update(time))
+            if (_poof != null && _poof.update(time))
             {
-                this.poof = null;
+                _poof = null;
             }
-            if (this.chestColorPicker != null)
-            {
-                this.chestColorPicker.update(time);
-            }
+            ChestColorPicker?.update(time);
         }
 
         //DONE
         public override void performHoverAction(int x, int y)
         {
-            if (this.colorPickerToggleButton != null)
+            if (ColorPickerToggleButton != null)
             {
-                this.colorPickerToggleButton.tryHover(x, y, 0.25f);
-                if (this.colorPickerToggleButton.containsPoint(x, y))
+                ColorPickerToggleButton.tryHover(x, y, 0.25f);
+                if (ColorPickerToggleButton.containsPoint(x, y))
                 {
-                    this.hoverText = this.colorPickerToggleButton.hoverText;
+                    hoverText = ColorPickerToggleButton.hoverText;
                     return;
                 }
             }
-            if (this.specialButton != null)
-            {
-                this.specialButton.tryHover(x, y, 0.25f);
-            }
-            if (!this.ItemsToGrabMenu.isWithinBounds(x, y) || !this.showReceivingMenu)
+            SpecialButton?.tryHover(x, y, 0.25f);
+            if (!ItemsToGrabMenu.isWithinBounds(x, y) || !ShowReceivingMenu)
             {
                 base.performHoverAction(x, y);
             }
             else
             {
-                this.hoveredItem = this.ItemsToGrabMenu.hover(x, y, this.heldItem);
+                hoveredItem = ItemsToGrabMenu.hover(x, y, heldItem);
             }
-            if (this.organizeButton != null)
+            if (OrganizeButton != null)
             {
-                this.hoverText = null;
-                this.organizeButton.tryHover(x, y, 0.1f);
-                if (this.organizeButton.containsPoint(x, y))
+                hoverText = null;
+                OrganizeButton.tryHover(x, y);
+                if (OrganizeButton.containsPoint(x, y))
                 {
-                    this.hoverText = this.organizeButton.hoverText;
+                    hoverText = OrganizeButton.hoverText;
                 }
             }
 
             //M07: Needed to make previous/next page button usable
-            if (this.previousPageButton.containsPoint(x, y) && this.showPrevButton)
+            if (_previousPageButton.containsPoint(x, y) && _showPrevButton)
             {
-                this.hoverText = this.previousPageButton.hoverText;
+                hoverText = _previousPageButton.hoverText;
             }
 
-            if (this.nextPageButton.containsPoint(x, y) && this.showNextButton)
+            if (_nextPageButton.containsPoint(x, y) && _showNextButton)
             {
-                this.hoverText = this.nextPageButton.hoverText;
+                hoverText = _nextPageButton.hoverText;
             }
             //END_M07
 
-            if (this.shippingBin)
+            if (ShippingBin)
             {
-                this.hoverText = null;
-                if (this.lastShippedHolder.containsPoint(x, y) && Game1.getFarm().lastItemShipped != null)
+                hoverText = null;
+                if (LastShippedHolder.containsPoint(x, y) && Game1.getFarm().lastItemShipped != null)
                 {
-                    this.hoverText = this.lastShippedHolder.hoverText;
+                    hoverText = LastShippedHolder.hoverText;
                 }
             }
-            if (this.chestColorPicker != null)
-            {
-                this.chestColorPicker.performHoverAction(x, y);
-            }
+            ChestColorPicker?.performHoverAction(x, y);
         }
 
         //DONE
-        protected override void customSnapBehavior(int direction, int oldRegion, int oldID)
+        protected override void customSnapBehavior(int direction, int oldRegion, int oldId)
         {
             if (direction != 2)
             {
                 if (direction == 0)
                 {
-                    if (this.shippingBin && Game1.getFarm().lastItemShipped != null && oldID < 12)
+                    if (ShippingBin && Game1.getFarm().lastItemShipped != null && oldId < 12)
                     {
-                        this.currentlySnappedComponent = base.getComponentWithID(12598);
-                        this.currentlySnappedComponent.downNeighborID = oldID;
-                        this.snapCursorToCurrentSnappedComponent();
+                        currentlySnappedComponent = getComponentWithID(12598);
+                        currentlySnappedComponent.downNeighborID = oldId;
+                        snapCursorToCurrentSnappedComponent();
                         return;
                     }
-                    if (oldID < 53910 && oldID >= 12)
+                    if (oldId < 53910 && oldId >= 12)
                     {
-                        this.currentlySnappedComponent = base.getComponentWithID(oldID - 12);
+                        currentlySnappedComponent = getComponentWithID(oldId - 12);
                         return;
                     }
-                    int num = oldID + 24;
-                    for (int i = 0; i < 3 && this.ItemsToGrabMenu.inventory.Count <= num; i++)
+                    int num = oldId + 24;
+                    for (int i = 0; i < 3 && ItemsToGrabMenu.inventory.Count <= num; i++)
                     {
                         num = num - 12;
                     }
                     if (num >= 0)
                     {
-                        this.currentlySnappedComponent = base.getComponentWithID(num + 53910);
+                        currentlySnappedComponent = getComponentWithID(num + 53910);
                     }
-                    else if (this.ItemsToGrabMenu.inventory.Count > 0)
+                    else if (ItemsToGrabMenu.inventory.Count > 0)
                     {
-                        this.currentlySnappedComponent = base.getComponentWithID(53910 + this.ItemsToGrabMenu.inventory.Count - 1);
+                        currentlySnappedComponent = getComponentWithID(53910 + ItemsToGrabMenu.inventory.Count - 1);
                     }
-                    else if (this.discreteColorPickerCC != null)
+                    else if (DiscreteColorPickerCc != null)
                     {
-                        this.currentlySnappedComponent = base.getComponentWithID(4343);
+                        currentlySnappedComponent = getComponentWithID(4343);
                     }
-                    this.snapCursorToCurrentSnappedComponent();
+                    snapCursorToCurrentSnappedComponent();
                 }
                 return;
             }
             for (int j = 0; j < 12; j++)
             {
-                if (this.inventory != null && this.inventory.inventory != null && this.inventory.inventory.Count >= 12 && this.shippingBin)
+                if (inventory != null && inventory.inventory != null && inventory.inventory.Count >= 12 && ShippingBin)
                 {
-                    this.inventory.inventory[j].upNeighborID = (this.shippingBin ? 12598 : Math.Min(j, this.ItemsToGrabMenu.inventory.Count - 1) + 53910);
+                    inventory.inventory[j].upNeighborID = (ShippingBin ? 12598 : Math.Min(j, ItemsToGrabMenu.inventory.Count - 1) + 53910);
                 }
             }
-            if (!this.shippingBin && oldID >= 53910)
+            if (!ShippingBin && oldId >= 53910)
             {
-                int num1 = oldID - 53910;
-                if (num1 + 12 <= this.ItemsToGrabMenu.inventory.Count - 1)
+                int num1 = oldId - 53910;
+                if (num1 + 12 <= ItemsToGrabMenu.inventory.Count - 1)
                 {
-                    this.currentlySnappedComponent = base.getComponentWithID(num1 + 12 + 53910);
-                    this.snapCursorToCurrentSnappedComponent();
+                    currentlySnappedComponent = getComponentWithID(num1 + 12 + 53910);
+                    snapCursorToCurrentSnappedComponent();
                     return;
                 }
             }
-            this.currentlySnappedComponent = base.getComponentWithID((oldRegion == 12598 ? 0 : (oldID - 53910) % 12));
-            this.snapCursorToCurrentSnappedComponent();
+            currentlySnappedComponent = getComponentWithID((oldRegion == 12598 ? 0 : (oldId - 53910) % 12));
+            snapCursorToCurrentSnappedComponent();
         }
 
-        //TODO
+        //TODOx
         public override void draw(SpriteBatch b)
         {
-            if (this.drawBG)
+            if (DrawBg)
             {
                 b.Draw(Game1.fadeToBlackRect, new Rectangle(0, 0, Game1.viewport.Width, Game1.viewport.Height), Color.Black * 0.5f);
             }
 
-            this.draw(b, false, false);
+            draw(b, false, false);
 
-            if (this.showReceivingMenu)
+            if (ShowReceivingMenu)
             {
-                b.Draw(Game1.mouseCursors, new Vector2((float)(this.xPositionOnScreen - 16 * Game1.pixelZoom), (float)(this.yPositionOnScreen + this.height / 2 + Game1.tileSize + Game1.pixelZoom * 4)), new Rectangle?(new Rectangle(16, 368, 12, 16)), Color.White, 4.712389f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 1f);
-                b.Draw(Game1.mouseCursors, new Vector2((float)(this.xPositionOnScreen - 16 * Game1.pixelZoom), (float)(this.yPositionOnScreen + this.height / 2 + Game1.tileSize - Game1.pixelZoom * 4)), new Rectangle?(new Rectangle(21, 368, 11, 16)), Color.White, 4.712389f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 1f);
-                b.Draw(Game1.mouseCursors, new Vector2((float)(this.xPositionOnScreen - 10 * Game1.pixelZoom), (float)(this.yPositionOnScreen + this.height / 2 + Game1.tileSize - Game1.pixelZoom * 11)), new Rectangle?(new Rectangle(4, 372, 8, 11)), Color.White, 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 1f);
-                if (this.source != 0)
+                b.Draw(Game1.mouseCursors, new Vector2(xPositionOnScreen - 16 * Game1.pixelZoom, yPositionOnScreen + height / 2 + Game1.tileSize + Game1.pixelZoom * 4), new Rectangle(16, 368, 12, 16), Color.White, 4.712389f, Vector2.Zero, Game1.pixelZoom, SpriteEffects.None, 1f);
+                b.Draw(Game1.mouseCursors, new Vector2(xPositionOnScreen - 16 * Game1.pixelZoom, yPositionOnScreen + height / 2 + Game1.tileSize - Game1.pixelZoom * 4), new Rectangle(21, 368, 11, 16), Color.White, 4.712389f, Vector2.Zero, Game1.pixelZoom, SpriteEffects.None, 1f);
+                b.Draw(Game1.mouseCursors, new Vector2(xPositionOnScreen - 10 * Game1.pixelZoom, yPositionOnScreen + height / 2 + Game1.tileSize - Game1.pixelZoom * 11), new Rectangle(4, 372, 8, 11), Color.White, 0.0f, Vector2.Zero, Game1.pixelZoom, SpriteEffects.None, 1f);
+                if (Source != 0)
                 {
-                    b.Draw(Game1.mouseCursors, new Vector2((float)(this.xPositionOnScreen - 18 * Game1.pixelZoom), (float)(this.yPositionOnScreen + Game1.tileSize + Game1.pixelZoom * 4)), new Rectangle?(new Rectangle(16, 368, 12, 16)), Color.White, 4.712389f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 1f);
-                    b.Draw(Game1.mouseCursors, new Vector2((float)(this.xPositionOnScreen - 18 * Game1.pixelZoom), (float)(this.yPositionOnScreen + Game1.tileSize - Game1.pixelZoom * 4)), new Rectangle?(new Rectangle(21, 368, 11, 16)), Color.White, 4.712389f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 1f);
-                    Rectangle rectangle = new Rectangle((int)sbyte.MaxValue, 412, 10, 11);
-                    switch (this.source)
+                    b.Draw(Game1.mouseCursors, new Vector2(xPositionOnScreen - 18 * Game1.pixelZoom, yPositionOnScreen + Game1.tileSize + Game1.pixelZoom * 4), new Rectangle(16, 368, 12, 16), Color.White, 4.712389f, Vector2.Zero, Game1.pixelZoom, SpriteEffects.None, 1f);
+                    b.Draw(Game1.mouseCursors, new Vector2(xPositionOnScreen - 18 * Game1.pixelZoom, yPositionOnScreen + Game1.tileSize - Game1.pixelZoom * 4), new Rectangle(21, 368, 11, 16), Color.White, 4.712389f, Vector2.Zero, Game1.pixelZoom, SpriteEffects.None, 1f);
+                    Rectangle rectangle = new Rectangle(sbyte.MaxValue, 412, 10, 11);
+                    switch (Source)
                     {
                         case 2:
                             rectangle.X += 20;
@@ -976,97 +951,89 @@ namespace ExtendedFridge
                             rectangle.X += 10;
                             break;
                     }
-                    b.Draw(Game1.mouseCursors, new Vector2((float)(this.xPositionOnScreen - 13 * Game1.pixelZoom), (float)(this.yPositionOnScreen + Game1.tileSize - Game1.pixelZoom * 11)), new Rectangle?(rectangle), Color.White, 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 1f);
+                    b.Draw(Game1.mouseCursors, new Vector2(xPositionOnScreen - 13 * Game1.pixelZoom, yPositionOnScreen + Game1.tileSize - Game1.pixelZoom * 11), rectangle, Color.White, 0.0f, Vector2.Zero, Game1.pixelZoom, SpriteEffects.None, 1f);
                 }
-                Game1.drawDialogueBox(this.ItemsToGrabMenu.xPositionOnScreen - IClickableMenu.borderWidth - IClickableMenu.spaceToClearSideBorder, this.ItemsToGrabMenu.yPositionOnScreen - IClickableMenu.borderWidth - IClickableMenu.spaceToClearTopBorder, this.ItemsToGrabMenu.width + IClickableMenu.borderWidth * 2 + IClickableMenu.spaceToClearSideBorder * 2, this.ItemsToGrabMenu.height + IClickableMenu.spaceToClearTopBorder + IClickableMenu.borderWidth * 2, false, true, message, false);
-                this.ItemsToGrabMenu.draw(b);
+                Game1.drawDialogueBox(ItemsToGrabMenu.xPositionOnScreen - borderWidth - spaceToClearSideBorder, ItemsToGrabMenu.yPositionOnScreen - borderWidth - spaceToClearTopBorder, ItemsToGrabMenu.width + borderWidth * 2 + spaceToClearSideBorder * 2, ItemsToGrabMenu.height + spaceToClearTopBorder + borderWidth * 2, false, true, _message);
+                ItemsToGrabMenu.draw(b);
             }
-            else if (this.message != null)
+            else if (_message != null)
             {
-                Game1.drawDialogueBox(Game1.viewport.Width / 2, this.ItemsToGrabMenu.yPositionOnScreen + this.ItemsToGrabMenu.height / 2, false, false, this.message);
+                Game1.drawDialogueBox(Game1.viewport.Width / 2, ItemsToGrabMenu.yPositionOnScreen + ItemsToGrabMenu.height / 2, false, false, _message);
             }
 
-            if (this.poof != null)
+            _poof?.draw(b, true);
+
+            if (ShippingBin && Game1.getFarm().lastItemShipped != null)
             {
-                this.poof.draw(b, true, 0, 0);
+                LastShippedHolder.draw(b);
+                Game1.getFarm().lastItemShipped.drawInMenu(b, new Vector2(LastShippedHolder.bounds.X + Game1.pixelZoom * 4, LastShippedHolder.bounds.Y + Game1.pixelZoom * 4), 1f);
+                b.Draw(Game1.mouseCursors, new Vector2(LastShippedHolder.bounds.X + Game1.pixelZoom * -2, LastShippedHolder.bounds.Bottom - Game1.pixelZoom * 25), new Rectangle(325, 448, 5, 14), Color.White, 0.0f, Vector2.Zero, Game1.pixelZoom, SpriteEffects.None, 1f);
+                b.Draw(Game1.mouseCursors, new Vector2(LastShippedHolder.bounds.X + Game1.pixelZoom * 21, LastShippedHolder.bounds.Bottom - Game1.pixelZoom * 25), new Rectangle(325, 448, 5, 14), Color.White, 0.0f, Vector2.Zero, Game1.pixelZoom, SpriteEffects.None, 1f);
+                b.Draw(Game1.mouseCursors, new Vector2(LastShippedHolder.bounds.X + Game1.pixelZoom * -2, LastShippedHolder.bounds.Bottom - Game1.pixelZoom * 11), new Rectangle(325, 452, 5, 13), Color.White, 0.0f, Vector2.Zero, Game1.pixelZoom, SpriteEffects.None, 1f);
+                b.Draw(Game1.mouseCursors, new Vector2(LastShippedHolder.bounds.X + Game1.pixelZoom * 21, LastShippedHolder.bounds.Bottom - Game1.pixelZoom * 11), new Rectangle(325, 452, 5, 13), Color.White, 0.0f, Vector2.Zero, Game1.pixelZoom, SpriteEffects.None, 1f);
             }
 
-            if (this.shippingBin && Game1.getFarm().lastItemShipped != null)
-            {
-                this.lastShippedHolder.draw(b);
-                Game1.getFarm().lastItemShipped.drawInMenu(b, new Vector2((float)(this.lastShippedHolder.bounds.X + Game1.pixelZoom * 4), (float)(this.lastShippedHolder.bounds.Y + Game1.pixelZoom * 4)), 1f);
-                b.Draw(Game1.mouseCursors, new Vector2((float)(this.lastShippedHolder.bounds.X + Game1.pixelZoom * -2), (float)(this.lastShippedHolder.bounds.Bottom - Game1.pixelZoom * 25)), new Rectangle?(new Rectangle(325, 448, 5, 14)), Color.White, 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 1f);
-                b.Draw(Game1.mouseCursors, new Vector2((float)(this.lastShippedHolder.bounds.X + Game1.pixelZoom * 21), (float)(this.lastShippedHolder.bounds.Bottom - Game1.pixelZoom * 25)), new Rectangle?(new Rectangle(325, 448, 5, 14)), Color.White, 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 1f);
-                b.Draw(Game1.mouseCursors, new Vector2((float)(this.lastShippedHolder.bounds.X + Game1.pixelZoom * -2), (float)(this.lastShippedHolder.bounds.Bottom - Game1.pixelZoom * 11)), new Rectangle?(new Rectangle(325, 452, 5, 13)), Color.White, 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 1f);
-                b.Draw(Game1.mouseCursors, new Vector2((float)(this.lastShippedHolder.bounds.X + Game1.pixelZoom * 21), (float)(this.lastShippedHolder.bounds.Bottom - Game1.pixelZoom * 11)), new Rectangle?(new Rectangle(325, 452, 5, 13)), Color.White, 0.0f, Vector2.Zero, (float)Game1.pixelZoom, SpriteEffects.None, 1f);
-            }
+            OrganizeButton?.draw(b);
 
-            if (this.organizeButton != null)
-            {
-                this.organizeButton.draw(b);
-            }
+            if (_showPrevButton) { _previousPageButton.draw(b); }
+            if (_showNextButton) { _nextPageButton.draw(b); }
 
-            if (this.showPrevButton) { this.previousPageButton.draw(b); }
-            if (this.showNextButton) { this.nextPageButton.draw(b); }
-
-            if (this.hoverText != null && (this.hoveredItem == null || this.hoveredItem == null || this.ItemsToGrabMenu == null))
-                IClickableMenu.drawHoverText(b, this.hoverText, Game1.smallFont, 0, 0, -1, (string)null, -1, (string[])null, (Item)null, 0, -1, -1, -1, -1, 1f, (CraftingRecipe)null);
-            if (this.hoveredItem != null)
-                IClickableMenu.drawToolTip(b, this.hoveredItem.getDescription(), this.hoveredItem.Name, this.hoveredItem, this.heldItem != null, -1, 0, -1, -1, (CraftingRecipe)null, -1);
-            else if (this.hoveredItem != null && this.ItemsToGrabMenu != null)
-                IClickableMenu.drawToolTip(b, this.ItemsToGrabMenu.descriptionText, this.ItemsToGrabMenu.descriptionTitle, this.hoveredItem, this.heldItem != null, -1, 0, -1, -1, (CraftingRecipe)null, -1);
-            if (this.heldItem != null)
-                this.heldItem.drawInMenu(b, new Vector2((float)(Game1.getOldMouseX() + 8), (float)(Game1.getOldMouseY() + 8)), 1f);
+            if (hoverText != null && (hoveredItem == null || ItemsToGrabMenu == null))
+                drawHoverText(b, hoverText, Game1.smallFont);
+            if (hoveredItem != null)
+                drawToolTip(b, hoveredItem.getDescription(), hoveredItem.Name, hoveredItem, heldItem != null);
+            else if (hoveredItem != null && ItemsToGrabMenu != null)
+                drawToolTip(b, ItemsToGrabMenu.descriptionText, ItemsToGrabMenu.descriptionTitle, hoveredItem, heldItem != null);
+            heldItem?.drawInMenu(b, new Vector2(Game1.getOldMouseX() + 8, Game1.getOldMouseY() + 8), 1f);
             Game1.mouseCursorTransparency = 1f;
 
             //IClickableMenu.drawTextureBox(b, Game1.menuTexture, new Rectangle(0, 256, 60, 60), 200, 20, 880, 76,new Color(125f,125f,125f) , 1f, true);
-            this.drawBorderLabel(b, M007_ExtendedFridge_Mod.showMessage()/*message*/, Game1.smallFont, this.xPositionOnScreen, 0);
+            drawBorderLabel(b, ExtendedFridgeMod.ShowMessage()/*message*/, Game1.smallFont, xPositionOnScreen, 0);
 
-            this.drawMouse(b);
+            drawMouse(b);
         }
 
         //NOMOD
-        public void setSourceItem(Item item)
+        public void SetSourceItem(Item item)
         {
-            this.sourceItem = item;
-            this.chestColorPicker = null;
-            this.colorPickerToggleButton = null;
-            if (this.source == 1 && this.sourceItem != null && this.sourceItem is Chest)
+            _sourceItem = item;
+            ChestColorPicker = null;
+            ColorPickerToggleButton = null;
+            if (Source == 1 && _sourceItem is Chest)
             {
-                this.chestColorPicker = new DiscreteColorPicker(this.xPositionOnScreen, this.yPositionOnScreen - Game1.tileSize - IClickableMenu.borderWidth * 2, 0, new Chest(true))
+                if (ChestColorPicker != null)
                 {
-                    colorSelection = this.chestColorPicker.getSelectionFromColor((this.sourceItem as Chest).playerChoiceColor.Value)
-                };
-                (this.chestColorPicker.itemToDrawColored as Chest).playerChoiceColor.Value = this.chestColorPicker.getColorFromSelection(this.chestColorPicker.colorSelection);
-                ClickableTextureComponent clickableTextureComponent = new ClickableTextureComponent(new Microsoft.Xna.Framework.Rectangle(this.xPositionOnScreen + this.width, this.yPositionOnScreen + Game1.tileSize + Game1.pixelZoom * 5, 16 * Game1.pixelZoom, 16 * Game1.pixelZoom), Game1.mouseCursors, new Microsoft.Xna.Framework.Rectangle(119, 469, 16, 16), (float)Game1.pixelZoom, false)
+                    ChestColorPicker = new DiscreteColorPicker(xPositionOnScreen,
+                        yPositionOnScreen - Game1.tileSize - borderWidth * 2, 0, new Chest(true))
+                    {
+                        colorSelection =
+                            ChestColorPicker.getSelectionFromColor(((Chest) _sourceItem).playerChoiceColor.Value)
+                    };
+                    ((Chest) ChestColorPicker.itemToDrawColored).playerChoiceColor.Value =
+                        ChestColorPicker.getColorFromSelection(ChestColorPicker.colorSelection);
+                }
+                var clickableTextureComponent = new ClickableTextureComponent(new Rectangle(xPositionOnScreen + width, yPositionOnScreen + Game1.tileSize + Game1.pixelZoom * 5, 16 * Game1.pixelZoom, 16 * Game1.pixelZoom), Game1.mouseCursors, new Rectangle(119, 469, 16, 16), Game1.pixelZoom)
                 {
                     hoverText = Game1.content.LoadString("Strings\\UI:Toggle_ColorPicker", new object[0])
                 };
-                this.colorPickerToggleButton = clickableTextureComponent;
+                ColorPickerToggleButton = clickableTextureComponent;
             }
         }
 
         //NOMOD
-        public override void snapToDefaultClickableComponent()
+        public sealed override void snapToDefaultClickableComponent()
         {
-            if (!this.shippingBin)
-            {
-                this.currentlySnappedComponent = base.getComponentWithID((this.ItemsToGrabMenu.inventory.Count > 0 ? 53910 : 0));
-            }
-            else
-            {
-                this.currentlySnappedComponent = base.getComponentWithID(0);
-            }
-            this.snapCursorToCurrentSnappedComponent();
+            currentlySnappedComponent = !ShippingBin ? getComponentWithID((ItemsToGrabMenu.inventory.Count > 0 ? 53910 : 0)) : getComponentWithID(0);
+            snapCursorToCurrentSnappedComponent();
         }
 
         //NOMOD
         public override void receiveGamePadButton(Buttons b)
         {
             base.receiveGamePadButton(b);
-            if (b == Buttons.Back && this.organizeButton != null)
+            if (b == Buttons.Back && OrganizeButton != null)
             {
-                FridgeGrabMenu.organizeItemsInList(Game1.player.Items);
+                OrganizeItemsInList(Game1.player.Items);
                 Game1.playSound("Ship");
             }
         }

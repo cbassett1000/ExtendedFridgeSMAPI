@@ -5,7 +5,7 @@
         "MajorVersion": 1,
         "MinorVersion": 1,
         "PatchVersion": 1,
-        "Build": "-unofficial.3.mizzion"
+        "Build": "-unofficial.4.mizzion"
     },
     "Description": "Lets you add more items to the fridge.",
     "UniqueID": "Crystalmir.ExtendedFridge",
